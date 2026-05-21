@@ -31,8 +31,8 @@ export function HeroSection() {
 
   return (
     <section className="relative min-h-screen flex flex-col justify-center overflow-hidden pt-20 md:pt-0">
-      {/* Animated sphere background */}
-      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[600px] h-[600px] lg:w-[800px] lg:h-[800px] opacity-40 pointer-events-none">
+      {/* Animated sphere background - hidden on mobile */}
+      <div className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 w-[600px] h-[600px] lg:w-[800px] lg:h-[800px] opacity-40 pointer-events-none">
         <AnimatedSphere />
       </div>
       
@@ -120,14 +120,14 @@ export function HeroSection() {
           
           {/* CTAs */}
           <div 
-            className={`flex flex-col sm:flex-row items-start gap-4 transition-all duration-700 delay-300 ${
+            className={`flex flex-row items-center gap-3 sm:gap-4 transition-all duration-700 delay-300 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
           >
             <Button 
               size="lg" 
               onClick={() => scrollToSection("contact")}
-              className="bg-foreground hover:bg-foreground/90 text-background px-8 h-14 text-base rounded-full group"
+              className="bg-foreground hover:bg-foreground/90 text-background px-5 sm:px-8 h-12 sm:h-14 text-sm sm:text-base rounded-full group"
             >
               Start a Project
               <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
@@ -136,23 +136,19 @@ export function HeroSection() {
               size="lg" 
               variant="outline" 
               onClick={() => scrollToSection("work")}
-              className="h-14 px-8 text-base rounded-full border-foreground/20 hover:bg-foreground/5"
+              className="h-12 sm:h-14 px-5 sm:px-8 text-sm sm:text-base rounded-full border-foreground/20 hover:bg-foreground/5"
             >
               See Our Work
             </Button>
           </div>
         </div>
         
-      </div>
-      
-      {/* Stats - mobile: stacked grid, desktop: marquee */}
-      <div 
-        className={`absolute bottom-12 md:bottom-24 left-0 right-0 transition-all duration-700 delay-500 ${
-          isVisible ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        {/* Mobile: 2x2 Grid */}
-        <div className="md:hidden px-6">
+        {/* Mobile Stats - in flow, not absolute */}
+        <div 
+          className={`md:hidden mt-12 transition-all duration-700 delay-500 ${
+            isVisible ? "opacity-100" : "opacity-0"
+          }`}
+        >
           <div className="grid grid-cols-2 gap-6">
             {[
               { value: "1", label: "Successful Acquisition" },
@@ -170,27 +166,32 @@ export function HeroSection() {
           </div>
         </div>
         
-        {/* Desktop: Marquee */}
-        <div className="hidden md:block">
-          <div className="flex gap-16 marquee whitespace-nowrap">
-            {[...Array(2)].map((_, i) => (
-              <div key={i} className="flex gap-16">
-                {[
-                  { value: "1", label: "Successful Acquisition" },
-                  { value: "3+", label: "Years Building" },
-                  { value: "500+", label: "Users Served" },
-                  { value: "2024", label: "Studio Founded" },
-                ].map((stat) => (
-                  <div key={`${stat.label}-${i}`} className="flex items-baseline gap-4">
-                    <span className="text-4xl lg:text-5xl font-display">{stat.value}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {stat.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
+      </div>
+      
+      {/* Desktop Stats - absolute positioned marquee */}
+      <div 
+        className={`hidden md:block absolute bottom-24 left-0 right-0 transition-all duration-700 delay-500 ${
+          isVisible ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        <div className="flex gap-16 marquee whitespace-nowrap">
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="flex gap-16">
+              {[
+                { value: "1", label: "Successful Acquisition" },
+                { value: "3+", label: "Years Building" },
+                { value: "500+", label: "Users Served" },
+                { value: "2024", label: "Studio Founded" },
+              ].map((stat) => (
+                <div key={`${stat.label}-${i}`} className="flex items-baseline gap-4">
+                  <span className="text-4xl lg:text-5xl font-display">{stat.value}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {stat.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ))}
         </div>
       </div>
       
