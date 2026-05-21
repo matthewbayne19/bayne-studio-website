@@ -5,40 +5,25 @@ import { useEffect, useRef, useState } from "react";
 const steps = [
   {
     number: "I",
-    title: "Connect your tools",
-    description: "Integrate with your existing stack in minutes. We support 200+ data sources out of the box.",
-    code: `import { optimus } from '@optimus/core'
-
-optimus.connect({
-  source: 'your-database',
-  sync: true
-})`,
+    title: "Scope & Strategy",
+    description: "We start with a discovery call to understand your goals, timeline, and budget. No fluff — just a clear plan.",
   },
   {
     number: "II",
-    title: "Build your workflow",
-    description: "Design powerful automations with our visual builder or write code directly.",
-    code: `optimus.workflow('process', {
-  trigger: 'event',
-  actions: [
-    'validate',
-    'transform', 
-    'deliver'
-  ]
-})`,
+    title: "Design & Build",
+    description: "We move fast without cutting corners. You get regular updates and working software throughout the process.",
   },
   {
     number: "III",
-    title: "Ship to production",
-    description: "Deploy globally with zero configuration. Your app goes live in under 30 seconds.",
-    code: `optimus.deploy({
-  target: 'production',
-  regions: 'auto'
-})
-
-// Deployed to 12 regions`,
+    title: "Launch & Beyond",
+    description: "We handle deployment and make sure everything is live and running. Ongoing support available after launch.",
   },
 ];
+
+const terminalOutput = `$ bayne-studio --init your-idea
+✓ Scoping complete
+✓ Build in progress...
+✓ Shipped to production`;
 
 export function HowItWorksSection() {
   const [activeStep, setActiveStep] = useState(0);
@@ -95,9 +80,7 @@ export function HowItWorksSection() {
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
           >
-            Three steps.
-            <br />
-            <span className="text-background/50">Infinite possibilities.</span>
+            How We Work.
           </h2>
         </div>
 
@@ -141,7 +124,7 @@ export function HowItWorksSection() {
             ))}
           </div>
 
-          {/* Code display */}
+          {/* Terminal display */}
           <div className="lg:sticky lg:top-32 self-start">
             <div className="border border-background/10 overflow-hidden">
               {/* Window header */}
@@ -151,33 +134,22 @@ export function HowItWorksSection() {
                   <div className="w-3 h-3 rounded-full bg-background/20" />
                   <div className="w-3 h-3 rounded-full bg-background/20" />
                 </div>
-                <span className="text-xs font-mono text-background/40">workflow.ts</span>
+                <span className="text-xs font-mono text-background/40">terminal</span>
               </div>
 
-              {/* Code content */}
+              {/* Terminal content */}
               <div className="p-8 font-mono text-sm min-h-[280px]">
                 <pre className="text-background/70">
-                  {steps[activeStep].code.split('\n').map((line, lineIndex) => (
+                  {terminalOutput.split('\n').map((line, lineIndex) => (
                     <div 
-                      key={`${activeStep}-${lineIndex}`} 
+                      key={lineIndex} 
                       className="leading-loose code-line-reveal"
                       style={{ 
-                        animationDelay: `${lineIndex * 80}ms`,
+                        animationDelay: `${lineIndex * 400}ms`,
                       }}
                     >
-                      <span className="text-background/20 select-none w-8 inline-block">{lineIndex + 1}</span>
-                      <span className="inline-flex">
-                        {line.split('').map((char, charIndex) => (
-                          <span
-                            key={`${activeStep}-${lineIndex}-${charIndex}`}
-                            className="code-char-reveal"
-                            style={{
-                              animationDelay: `${lineIndex * 80 + charIndex * 15}ms`,
-                            }}
-                          >
-                            {char === ' ' ? '\u00A0' : char}
-                          </span>
-                        ))}
+                      <span className={`inline-flex ${line.startsWith('✓') ? 'text-green-400' : ''}`}>
+                        {line}
                       </span>
                     </div>
                   ))}
@@ -187,7 +159,7 @@ export function HowItWorksSection() {
               {/* Status */}
               <div className="px-6 py-4 border-t border-background/10 flex items-center gap-3">
                 <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-xs font-mono text-background/40">Ready</span>
+                <span className="text-xs font-mono text-background/40">Ready to ship</span>
               </div>
             </div>
           </div>
@@ -210,19 +182,6 @@ export function HowItWorksSection() {
           to {
             opacity: 1;
             transform: translateX(0);
-          }
-        }
-        
-        .code-char-reveal {
-          opacity: 0;
-          filter: blur(8px);
-          animation: charReveal 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-        }
-        
-        @keyframes charReveal {
-          to {
-            opacity: 1;
-            filter: blur(0);
           }
         }
       `}</style>

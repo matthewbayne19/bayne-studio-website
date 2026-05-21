@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { AnimatedSphere } from "./animated-sphere";
 
-const words = ["create", "build", "scale", "ship"];
+const words = ["ships", "builds", "delivers", "creates"];
 
 export function HeroSection() {
   const [isVisible, setIsVisible] = useState(false);
@@ -21,6 +21,13 @@ export function HeroSection() {
     }, 2500);
     return () => clearInterval(interval);
   }, []);
+
+  const scrollToSection = (id: string) => {
+    const section = document.getElementById(id);
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   return (
     <section className="relative min-h-screen flex flex-col justify-center overflow-hidden">
@@ -64,7 +71,7 @@ export function HeroSection() {
         >
           <span className="inline-flex items-center gap-3 text-sm font-mono text-muted-foreground">
             <span className="w-8 h-px bg-foreground/30" />
-            The platform for modern teams
+            Independent Software Studio
           </span>
         </div>
         
@@ -75,9 +82,9 @@ export function HeroSection() {
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}
           >
-            <span className="block">The platform</span>
+            <span className="block">The studio</span>
             <span className="block">
-              to{" "}
+              that{" "}
               <span className="relative inline-block">
                 <span 
                   key={wordIndex}
@@ -95,7 +102,7 @@ export function HeroSection() {
                     </span>
                   ))}
                 </span>
-                <span className="absolute -bottom-2 left-0 right-0 h-3 bg-foreground/10" />
+                <span className="absolute -bottom-2 left-0 right-0 h-3 bg-[#0EA5E9]/20" />
               </span>
             </span>
           </h1>
@@ -108,8 +115,7 @@ export function HeroSection() {
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
           >
-            Your toolkit to stop configuring and start innovating. 
-            Securely build, deploy, and scale the best experiences.
+            Bayne Studio builds consumer-facing iOS apps and custom websites for clients who want software done right — fast, clean, and built to last.
           </p>
           
           {/* CTAs */}
@@ -120,17 +126,19 @@ export function HeroSection() {
           >
             <Button 
               size="lg" 
+              onClick={() => scrollToSection("contact")}
               className="bg-foreground hover:bg-foreground/90 text-background px-8 h-14 text-base rounded-full group"
             >
-              Start free trial
+              Start a Project
               <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
             </Button>
             <Button 
               size="lg" 
               variant="outline" 
+              onClick={() => scrollToSection("work")}
               className="h-14 px-8 text-base rounded-full border-foreground/20 hover:bg-foreground/5"
             >
-              Watch demo
+              See Our Work
             </Button>
           </div>
         </div>
@@ -147,16 +155,15 @@ export function HeroSection() {
           {[...Array(2)].map((_, i) => (
             <div key={i} className="flex gap-16">
               {[
-                { value: "20 days", label: "saved on builds", company: "NETFLIX" },
-                { value: "98%", label: "faster deployment", company: "STRIPE" },
-                { value: "300%", label: "throughput increase", company: "LINEAR" },
-                { value: "6x", label: "faster to ship", company: "NOTION" },
+                { value: "1", label: "Successful Acquisition" },
+                { value: "3+", label: "Years Building" },
+                { value: "500+", label: "Users Served" },
+                { value: "2024", label: "Studio Founded" },
               ].map((stat) => (
-                <div key={`${stat.company}-${i}`} className="flex items-baseline gap-4">
+                <div key={`${stat.label}-${i}`} className="flex items-baseline gap-4">
                   <span className="text-4xl lg:text-5xl font-display">{stat.value}</span>
                   <span className="text-sm text-muted-foreground">
                     {stat.label}
-                    <span className="block font-mono text-xs mt-1">{stat.company}</span>
                   </span>
                 </div>
               ))}
