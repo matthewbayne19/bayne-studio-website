@@ -4,8 +4,7 @@ import { useEffect, useState, useRef } from "react";
 
 const highlights = [
   { label: "Status", value: "Acquired", detail: "October 2025" },
-  { label: "Users", value: "500+", detail: "Active Users" },
-  { label: "Stack", value: "Full-Stack", detail: "iOS + Backend" },
+  { label: "Users", value: "500+", detail: "Users Served" },
 ];
 
 export function InfrastructureSection() {
@@ -49,7 +48,7 @@ export function InfrastructureSection() {
             </p>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 md:gap-8">
+            <div className="grid grid-cols-2 gap-8 md:gap-12 max-w-xs">
               {highlights.map((stat) => (
                 <div key={stat.label}>
                   <div className="text-2xl md:text-3xl lg:text-4xl font-display mb-1 md:mb-2">{stat.value}</div>
