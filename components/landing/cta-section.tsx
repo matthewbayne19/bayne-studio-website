@@ -143,7 +143,7 @@ export function CtaSection() {
   };
 
   return (
-    <section id="contact" ref={sectionRef} className="relative py-24 lg:py-32 overflow-hidden">
+    <section id="contact" ref={sectionRef} className="relative py-16 md:py-24 lg:py-32 overflow-hidden">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
         <div
           className={`relative border border-foreground transition-all duration-1000 ${
@@ -159,15 +159,15 @@ export function CtaSection() {
             }}
           />
           
-          <div className="relative z-10 px-8 lg:px-16 py-16 lg:py-24">
-            <div className="flex flex-col lg:flex-row items-start justify-between gap-12 lg:gap-16">
+          <div className="relative z-10 px-6 md:px-8 lg:px-16 py-10 md:py-16 lg:py-24">
+            <div className="flex flex-col lg:flex-row items-start justify-between gap-10 lg:gap-16">
               {/* Left content */}
               <div className="flex-1 lg:max-w-md">
-                <h2 className="text-4xl lg:text-6xl font-display tracking-tight mb-6 leading-[0.95]">
+                <h2 className="text-3xl md:text-4xl lg:text-6xl font-display tracking-tight mb-4 md:mb-6 leading-[0.95]">
                   Start a Project
                 </h2>
 
-                <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
+                <p className="text-lg md:text-xl text-muted-foreground mb-6 md:mb-8 leading-relaxed">
                   Tell us what you&apos;re building. We&apos;ll get back to you within 24 hours.
                 </p>
 
@@ -203,7 +203,7 @@ export function CtaSection() {
                     </Button>
                   </div>
                 ) : (
-                  <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+                  <form ref={formRef} onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
                     {/* Name */}
                     <div>
                       <label htmlFor="name" className="block text-sm font-medium mb-2">

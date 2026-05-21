@@ -220,26 +220,26 @@ function ServiceCard({ service, index }: { service: typeof services[0]; index: n
       }`}
       style={{ transitionDelay: `${index * 100}ms` }}
     >
-      <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 py-12 lg:py-20 border-b border-foreground/10">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-16 py-8 md:py-12 lg:py-20 border-b border-foreground/10">
         {/* Number */}
         <div className="shrink-0">
           <span className="font-mono text-sm text-muted-foreground">{service.number}</span>
         </div>
         
         {/* Content */}
-        <div className="flex-1 grid lg:grid-cols-2 gap-8 items-center">
+          <div className="flex-1 grid lg:grid-cols-2 gap-6 lg:gap-8 items-center">
           <div>
-            <h3 className="text-3xl lg:text-4xl font-display mb-4 group-hover:translate-x-2 transition-transform duration-500">
+            <h3 className="text-2xl md:text-3xl lg:text-4xl font-display mb-3 md:mb-4 group-hover:translate-x-2 transition-transform duration-500">
               {service.title}
             </h3>
-            <p className="text-lg text-muted-foreground leading-relaxed">
+            <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
               {service.description}
             </p>
           </div>
           
           {/* Visual */}
           <div className="flex justify-center lg:justify-end">
-            <div className="w-48 h-40 text-foreground">
+            <div className="w-40 h-32 md:w-48 md:h-40 text-foreground">
               <AnimatedVisual type={service.visual} />
             </div>
           </div>
@@ -269,17 +269,17 @@ export function FeaturesSection() {
     <section
       id="services"
       ref={sectionRef}
-      className="relative py-24 lg:py-32"
+      className="relative py-16 md:py-24 lg:py-32"
     >
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
         {/* Header */}
-        <div className="mb-16 lg:mb-24">
-          <span className="inline-flex items-center gap-3 text-sm font-mono text-muted-foreground mb-6">
+        <div className="mb-12 md:mb-16 lg:mb-24">
+          <span className="inline-flex items-center gap-3 text-sm font-mono text-muted-foreground mb-4 md:mb-6">
             <span className="w-8 h-px bg-foreground/30" />
             Services
           </span>
           <h2
-            className={`text-4xl lg:text-6xl font-display tracking-tight transition-all duration-700 ${
+            className={`text-3xl md:text-4xl lg:text-6xl font-display tracking-tight transition-all duration-700 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
           >
