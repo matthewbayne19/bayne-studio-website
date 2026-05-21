@@ -30,7 +30,7 @@ export function HeroSection() {
   };
 
   return (
-    <section className="relative min-h-screen flex flex-col justify-center overflow-hidden">
+    <section className="relative min-h-screen flex flex-col justify-center overflow-hidden pt-20 md:pt-0">
       {/* Animated sphere background */}
       <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[600px] h-[600px] lg:w-[800px] lg:h-[800px] opacity-40 pointer-events-none">
         <AnimatedSphere />
@@ -62,7 +62,7 @@ export function HeroSection() {
         ))}
       </div>
       
-      <div className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-12 py-32 lg:py-40">
+      <div className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-12 py-20 md:py-32 lg:py-40">
         {/* Eyebrow */}
         <div 
           className={`mb-8 transition-all duration-700 ${
@@ -78,7 +78,7 @@ export function HeroSection() {
         {/* Main headline */}
         <div className="mb-12">
           <h1 
-            className={`text-[clamp(3rem,12vw,10rem)] font-display leading-[0.9] tracking-tight transition-all duration-1000 ${
+            className={`text-[clamp(2.5rem,10vw,10rem)] font-display leading-[0.9] tracking-tight transition-all duration-1000 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}
           >
@@ -109,9 +109,9 @@ export function HeroSection() {
         </div>
         
         {/* Description */}
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-24 items-end">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-24 items-end">
           <p 
-            className={`text-xl lg:text-2xl text-muted-foreground leading-relaxed max-w-xl transition-all duration-700 delay-200 ${
+            className={`text-lg md:text-xl lg:text-2xl text-muted-foreground leading-relaxed max-w-xl transition-all duration-700 delay-200 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
           >
@@ -145,30 +145,52 @@ export function HeroSection() {
         
       </div>
       
-      {/* Stats marquee - full width outside container */}
+      {/* Stats - mobile: stacked grid, desktop: marquee */}
       <div 
-        className={`absolute bottom-24 left-0 right-0 transition-all duration-700 delay-500 ${
+        className={`absolute bottom-12 md:bottom-24 left-0 right-0 transition-all duration-700 delay-500 ${
           isVisible ? "opacity-100" : "opacity-0"
         }`}
       >
-        <div className="flex gap-16 marquee whitespace-nowrap">
-          {[...Array(2)].map((_, i) => (
-            <div key={i} className="flex gap-16">
-              {[
-                { value: "1", label: "Successful Acquisition" },
-                { value: "3+", label: "Years Building" },
-                { value: "500+", label: "Users Served" },
-                { value: "2024", label: "Studio Founded" },
-              ].map((stat) => (
-                <div key={`${stat.label}-${i}`} className="flex items-baseline gap-4">
-                  <span className="text-4xl lg:text-5xl font-display">{stat.value}</span>
-                  <span className="text-sm text-muted-foreground">
-                    {stat.label}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ))}
+        {/* Mobile: 2x2 Grid */}
+        <div className="md:hidden px-6">
+          <div className="grid grid-cols-2 gap-6">
+            {[
+              { value: "1", label: "Successful Acquisition" },
+              { value: "3+", label: "Years Building" },
+              { value: "500+", label: "Users Served" },
+              { value: "2024", label: "Studio Founded" },
+            ].map((stat) => (
+              <div key={stat.label} className="flex flex-col">
+                <span className="text-3xl font-display">{stat.value}</span>
+                <span className="text-xs text-muted-foreground mt-1">
+                  {stat.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Desktop: Marquee */}
+        <div className="hidden md:block">
+          <div className="flex gap-16 marquee whitespace-nowrap">
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="flex gap-16">
+                {[
+                  { value: "1", label: "Successful Acquisition" },
+                  { value: "3+", label: "Years Building" },
+                  { value: "500+", label: "Users Served" },
+                  { value: "2024", label: "Studio Founded" },
+                ].map((stat) => (
+                  <div key={`${stat.label}-${i}`} className="flex items-baseline gap-4">
+                    <span className="text-4xl lg:text-5xl font-display">{stat.value}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {stat.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
       

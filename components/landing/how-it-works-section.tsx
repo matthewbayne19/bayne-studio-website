@@ -53,7 +53,7 @@ export function HowItWorksSection() {
     <section
       id="how-it-works"
       ref={sectionRef}
-      className="relative py-24 lg:py-32 bg-foreground text-background overflow-hidden"
+      className="relative py-16 md:py-24 lg:py-32 bg-foreground text-background overflow-hidden"
     >
       {/* Diagonal lines pattern */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
@@ -70,13 +70,13 @@ export function HowItWorksSection() {
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-12">
         {/* Header */}
-        <div className="mb-16 lg:mb-24">
-          <span className="inline-flex items-center gap-3 text-sm font-mono text-background/50 mb-6">
+        <div className="mb-12 md:mb-16 lg:mb-24">
+          <span className="inline-flex items-center gap-3 text-sm font-mono text-background/50 mb-4 md:mb-6">
             <span className="w-8 h-px bg-background/30" />
             Process
           </span>
           <h2
-            className={`text-4xl lg:text-6xl font-display tracking-tight transition-all duration-700 ${
+            className={`text-3xl md:text-4xl lg:text-6xl font-display tracking-tight transition-all duration-700 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
           >
@@ -85,7 +85,7 @@ export function HowItWorksSection() {
         </div>
 
         {/* Main content */}
-        <div className="grid lg:grid-cols-2 gap-16 lg:gap-24">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-24">
           {/* Steps */}
           <div className="space-y-0">
             {steps.map((step, index) => (
@@ -93,17 +93,17 @@ export function HowItWorksSection() {
                 key={step.number}
                 type="button"
                 onClick={() => setActiveStep(index)}
-                className={`w-full text-left py-8 border-b border-background/10 transition-all duration-500 group ${
+                className={`w-full text-left py-6 md:py-8 border-b border-background/10 transition-all duration-500 group ${
                   activeStep === index ? "opacity-100" : "opacity-40 hover:opacity-70"
                 }`}
               >
-                <div className="flex items-start gap-6">
-                  <span className="font-display text-3xl text-background/30">{step.number}</span>
+                <div className="flex items-start gap-4 md:gap-6">
+                  <span className="font-display text-2xl md:text-3xl text-background/30">{step.number}</span>
                   <div className="flex-1">
-                    <h3 className="text-2xl lg:text-3xl font-display mb-3 group-hover:translate-x-2 transition-transform duration-300">
+                    <h3 className="text-xl md:text-2xl lg:text-3xl font-display mb-2 md:mb-3 group-hover:translate-x-2 transition-transform duration-300">
                       {step.title}
                     </h3>
-                    <p className="text-background/60 leading-relaxed">
+                    <p className="text-sm md:text-base text-background/60 leading-relaxed">
                       {step.description}
                     </p>
                     
@@ -138,7 +138,7 @@ export function HowItWorksSection() {
               </div>
 
               {/* Terminal content */}
-              <div className="p-8 font-mono text-sm min-h-[280px]">
+              <div className="p-4 md:p-8 font-mono text-xs md:text-sm min-h-[200px] md:min-h-[280px]">
                 <pre className="text-background/70">
                   {terminalOutput.split('\n').map((line, lineIndex) => (
                     <div 
