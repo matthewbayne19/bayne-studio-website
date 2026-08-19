@@ -38,7 +38,7 @@ export default async function StorePage({ params }: PageProps) {
 
   return (
     <iframe
-      src={`/api/v0-preview/${record.chatId}/`}
+      src={`/api/v0-preview/${record.chatId}/?name=${encodeURIComponent(record.businessName)}`}
       className="h-full w-full border-0"
       title={`${record.businessName} preview`}
     />

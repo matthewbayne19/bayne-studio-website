@@ -37,6 +37,9 @@ async function rewriteAbsolutePaths(response: Response, prefix: string): Promise
 
 async function handler(request: Request, { params }: { params: Promise<Params> }) {
   const { chatId, path } = await params
+  const requestUrl = new URL(request.url)
+  const name = requestUrl.searchParams.get("name") ?? ""
+  const nameQuery = name ? `?name=${encodeURIComponent(name)}` : ""
 
   try {
     if (!process.env.V0_API_KEY) {
@@ -58,7 +61,7 @@ async function handler(request: Request, { params }: { params: Promise<Params> }
       request,
       preview: result.data,
       path,
-      fallbackUrl: `/api/v0-preview/${chatId}/loading`,
+      fallbackUrl: `/api/v0-preview/${chatId}/loading${nameQuery}`,
     })
 
     return await rewriteAbsolutePaths(previewResponse, `/api/v0-preview/${chatId}`)
