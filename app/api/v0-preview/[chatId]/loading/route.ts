@@ -1,3 +1,9 @@
+// Never cache this route. It renders per-request state (retry count via
+// the meta-refresh chain, the business name) and must always execute
+// fresh - Next.js caches GET route handlers by default otherwise, which
+// could mean seeing a stale, pre-fix response even after the code changes.
+export const dynamic = "force-dynamic"
+
 export async function GET(request: Request, { params }: { params: Promise<{ chatId: string }> }) {
   const { chatId } = await params
   const url = new URL(request.url)
@@ -8,55 +14,41 @@ export async function GET(request: Request, { params }: { params: Promise<{ chat
   return new Response(
     `<!doctype html>
 <html>
+
 <head>
   <meta http-equiv="refresh" content="2;url=/api/v0-preview/${chatId}/${nameQuery}" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
+    /* Content is visible by default - never hidden behind an animation
+       that might not fire. A safe base state matters more than a fade-in. */
     body {
       display: flex;
       align-items: center;
       justify-content: center;
       height: 100vh;
-      background: linear-gradient(135deg, #fafaf9 0%, #f0ede8 100%);
+      background: #fafaf9;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: #292524;
-      opacity: 0;
-      animation: fadeIn 0.4s ease-out forwards;
-    }
-
-    @keyframes fadeIn {
-      to { opacity: 1; }
     }
 
     .card {
       text-align: center;
-      padding: 3rem 2.5rem;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 320px;
     }
 
     .mark {
-      width: 56px;
-      height: 56px;
+      width: 44px;
+      height: 44px;
       margin: 0 auto 1.75rem;
-      position: relative;
-    }
-
-    .mark::before, .mark::after {
-      content: "";
-      position: absolute;
-      inset: 0;
       border-radius: 50%;
-      border: 2.5px solid transparent;
+      border: 3px solid #e7e2db;
       border-top-color: #d97757;
-    }
-
-    .mark::before {
-      animation: spin 1.1s linear infinite;
-    }
-
-    .mark::after {
-      border-top-color: transparent;
-      border: 2.5px solid #e7e2db;
+      /* If this animation doesn't run for any reason, this still renders
+         as a plain static ring - never invisible, just less lively. */
+      animation: spin 1s linear infinite;
     }
 
     @keyframes spin {
@@ -71,22 +63,30 @@ export async function GET(request: Request, { params }: { params: Promise<{ chat
     }
 
     p {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: #78716c;
+      margin-bottom: 1.5rem;
     }
 
-    .dots span {
-      display: inline-block;
-      animation: pulse 1.4s ease-in-out infinite;
-      opacity: 0.2;
+    .bar-track {
+      height: 4px;
+      width: 100%;
+      background: #e7e2db;
+      border-radius: 999px;
+      overflow: hidden;
     }
 
-    .dots span:nth-child(2) { animation-delay: 0.2s; }
-    .dots span:nth-child(3) { animation-delay: 0.4s; }
+    .bar-fill {
+      height: 100%;
+      width: 40%;
+      border-radius: 999px;
+      background: #d97757;
+      animation: slide 1.3s ease-in-out infinite;
+    }
 
-    @keyframes pulse {
-      0%, 80%, 100% { opacity: 0.2; }
-      40% { opacity: 1; }
+    @keyframes slide {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(250%); }
     }
   </style>
 </head>
@@ -94,11 +94,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ chat
   <div class="card">
     <div class="mark"></div>
     <h1>Preparing ${escapeHtml(displayName)}</h1>
-    <p>Just a moment<span class="dots"><span>.</span><span>.</span><span>.</span></span></p>
+    <p>Building your preview, just a moment</p>
+    <div class="bar-track">
+      <div class="bar-fill"></div>
+    </div>
   </div>
 </body>
 </html>`,
-    { headers: { "Content-Type": "text/html" } },
+    { headers: { "Content-Type": "text/html", "Cache-Control": "no-store, must-revalidate" } },
   )
 }
 

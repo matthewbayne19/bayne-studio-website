@@ -9,6 +9,17 @@
 import { config } from "dotenv"
 config({ path: ".env.local" })
 
+import { Agent, setGlobalDispatcher } from "undici"
+
+// Same reasoning as generate-site-v0.ts - refinements can also take a
+// while and are subject to the same default-timeout problem.
+setGlobalDispatcher(
+  new Agent({
+    headersTimeout: 10 * 60 * 1000,
+    bodyTimeout: 10 * 60 * 1000,
+  }),
+)
+
 import { createV0Client } from "v0"
 import { getChatRecord } from "../lib/sites/get-chat"
 

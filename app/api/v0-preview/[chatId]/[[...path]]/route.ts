@@ -35,6 +35,10 @@ async function rewriteAbsolutePaths(response: Response, prefix: string): Promise
   return new Response(rewritten, { status: response.status, statusText: response.statusText, headers })
 }
 
+// Never cache this route - it proxies live, per-request state from v0's
+// sandbox and must always execute fresh, same reasoning as the loading route.
+export const dynamic = "force-dynamic"
+
 async function handler(request: Request, { params }: { params: Promise<Params> }) {
   const { chatId, path } = await params
   const requestUrl = new URL(request.url)

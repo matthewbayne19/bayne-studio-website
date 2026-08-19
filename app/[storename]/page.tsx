@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { getAllStorenames, getChatRecord } from "@/lib/sites/get-chat"
+import { PreviewFrame } from "@/components/sites/preview-frame"
 
 type PageProps = {
   params: Promise<{ storename: string }>
@@ -36,11 +37,5 @@ export default async function StorePage({ params }: PageProps) {
     notFound()
   }
 
-  return (
-    <iframe
-      src={`/api/v0-preview/${record.chatId}/?name=${encodeURIComponent(record.businessName)}`}
-      className="h-full w-full border-0"
-      title={`${record.businessName} preview`}
-    />
-  )
+  return <PreviewFrame chatId={record.chatId} businessName={record.businessName} />
 }

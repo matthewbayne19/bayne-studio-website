@@ -13,6 +13,21 @@
 import { config } from "dotenv"
 config({ path: ".env.local" })
 
+import { Agent, setGlobalDispatcher } from "undici"
+
+// Node's default fetch timeout is too short for full site generations,
+// which can genuinely take several minutes for multi-section sites (this
+// is what caused UND_ERR_HEADERS_TIMEOUT / "Headers Timeout Error" - Node
+// gave up waiting for v0's server to respond before it actually finished
+// generating). This raises that ceiling for every fetch call in this
+// process, including the v0 SDK's internal ones.
+setGlobalDispatcher(
+  new Agent({
+    headersTimeout: 10 * 60 * 1000, // 10 minutes
+    bodyTimeout: 10 * 60 * 1000,
+  }),
+)
+
 import { createV0Client } from "v0"
 import { saveChatRecord } from "../lib/sites/get-chat"
 
@@ -58,33 +73,74 @@ not generic.`
 async function generateSite(storename: string, businessName: string, description: string) {
   const prompt = buildPrompt(businessName, description)
 
-  const result = await v0.chats.create({ message: prompt })
-  if (result.error) {
-    // Log the full error object, not just .message — "fetch failed" alone
-    // hides the actual cause (DNS, TLS, timeout, etc). This gives you
-    // something to actually debug instead of a dead end.
-    console.error("Full v0 error object:", JSON.stringify(result.error, null, 2))
-    throw new Error(`v0 chat creation failed: ${result.error.message}`)
+  // Using createAsync + polling instead of the synchronous create() call.
+  // create() holds one HTTP connection open for the entire generation,
+  // which can run for several minutes on a multi-section site - long
+  // enough to hit timeouts on v0's own infrastructure (UND_ERR_SOCKET,
+  // "other side closed"), not just our client. createAsync queues the job
+  // and returns immediately; we then poll a separate, fast status check
+  // instead of keeping one fragile long-lived connection open.
+  const queued = await v0.chats.createAsync({ message: prompt })
+  if (queued.error) {
+    console.error("v0 error object:", queued.error)
+    console.error("Underlying cause:", (queued.error as any)?.cause)
+    throw new Error(`v0 chat creation failed: ${queued.error.message}`)
   }
 
-  const chat = result.data.chat
+  const { chatId, messageId } = queued.data
+  console.log(`Queued generation for "${businessName}" (chat ${chatId}) - polling for completion...`)
 
-  saveChatRecord({
-    storename,
-    businessName,
-    chatId: chat.id,
-    status: "demo",
-    vercelProjectId: null,
-    createdAt: new Date().toISOString(),
-    deployedAt: null,
-    sourceDescription: description,
-  })
+  // Poll every 5s, up to 10 minutes total, checking finishReason on the
+  // message per the SDK's own documented pattern for this exact endpoint.
+  const pollIntervalMs = 5000
+  const maxAttempts = 120
+  let attempt = 0
 
-  console.log(`Created v0 chat ${chat.id} for "${businessName}"`)
-  console.log(`Preview locally at http://localhost:3000/${storename}`)
-  console.log(`Next: git add content/chats/${storename}.json, commit, push -> live at baynestudio.com/${storename}`)
-  console.log(``)
-  console.log(`To refine this site further, use scripts/refine-site.ts with chat ID ${chat.id}`)
+  while (attempt < maxAttempts) {
+    await new Promise((resolve) => setTimeout(resolve, pollIntervalMs))
+    attempt++
+
+    const messageResult = await v0.messages.get({ chatId, messageId })
+    if (messageResult.error) {
+      console.error("v0 error object:", messageResult.error)
+      throw new Error(`Polling failed: ${messageResult.error.message}`)
+    }
+
+    const finishReason = messageResult.data.finishReason
+    process.stdout.write(`  poll ${attempt}/${maxAttempts}: finishReason=${finishReason ?? "(pending)"}\r`)
+
+    if (finishReason === "error") {
+      throw new Error("v0 reported generation ended in an error state")
+    }
+
+    if (finishReason) {
+      console.log(`\nGeneration finished (${finishReason}) after ${attempt * (pollIntervalMs / 1000)}s`)
+
+      saveChatRecord({
+        storename,
+        businessName,
+        chatId,
+        status: "demo",
+        vercelProjectId: null,
+        createdAt: new Date().toISOString(),
+        deployedAt: null,
+        sourceDescription: description,
+      })
+
+      console.log(`Created v0 chat ${chatId} for "${businessName}"`)
+      console.log(`Preview locally at http://localhost:3000/${storename}`)
+      console.log(
+        `Next: git add content/chats/${storename}.json, commit, push -> live at baynestudio.com/${storename}`,
+      )
+      console.log(``)
+      console.log(`To refine this site further, use scripts/refine-site.ts with chat ID ${chatId}`)
+      return
+    }
+  }
+
+  throw new Error(
+    `Generation didn't finish after ${(maxAttempts * pollIntervalMs) / 1000}s of polling. The chat (${chatId}) may still be working - check https://v0.app directly, or try scripts/refine-site.ts against it once ready.`,
+  )
 }
 
 const [, , storename, businessName, description] = process.argv
