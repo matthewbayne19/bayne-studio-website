@@ -10,6 +10,11 @@ const footerLinks = [
   { name: "Contact", href: "#contact" },
 ];
 
+const legalLinks = [
+  { name: "Privacy Policy", href: "/privacy" },
+  { name: "Terms of Service", href: "/terms" },
+];
+
 export function FooterSection() {
   return (
     <footer className="relative border-t border-foreground/10">
@@ -70,7 +75,18 @@ export function FooterSection() {
           <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-xs md:text-sm text-muted-foreground text-center">
             <span>Bayne Studio — Jersey City, NJ</span>
             <span className="hidden md:inline">|</span>
-            <span>2026 Bayne Studio LLC. All rights reserved.</span>
+            <span>&copy; 2026 Matthew Bayne LLC, d/b/a Bayne Studio. All rights reserved.</span>
+          </div>
+
+          <div className="flex items-center gap-4 text-xs md:text-sm text-muted-foreground">
+            {legalLinks.map((link, i) => (
+              <span key={link.name} className="flex items-center gap-4">
+                <a href={link.href} className="hover:text-foreground transition-colors">
+                  {link.name}
+                </a>
+                {i < legalLinks.length - 1 && <span className="hidden md:inline">|</span>}
+              </span>
+            ))}
           </div>
         </div>
       </div>
