@@ -15,8 +15,6 @@
 import { config } from "dotenv"
 config({ path: ".env.local" })
 
-import fs from "node:fs"
-import path from "node:path"
 import { Agent, setGlobalDispatcher } from "undici"
 
 // Node's default fetch timeout is too short for full site generations,
@@ -35,6 +33,7 @@ setGlobalDispatcher(
 import { createV0Client } from "v0"
 import { saveChatRecord } from "../lib/sites/get-chat"
 import { uploadClientPhotos } from "../lib/sites/upload-photos"
+import { loadClientConfig, type ClientConfig } from "../lib/sites/client-config"
 
 // Built explicitly, after config() above has already run, so this always
 // sees the real key — unlike the default `v0` singleton export, which
@@ -62,55 +61,46 @@ House style for Bayne Studio client demo sites:
 - No placeholder Lorem Ipsum — write real, specific-sounding copy based on the description given.
 `.trim()
 
-function buildPrompt(businessName: string, description: string, photos: { label: string }[]): string {
+function buildPrompt(clientConfig: ClientConfig, photos: { label: string }[]): string {
+  const { businessName, description, address, phone, hours, website } = clientConfig
+
   const photoGuidance =
     photos.length > 0
       ? `\n\nAttached photos, in this order: ${photos.map((p, i) => `${i + 1}. ${p.label}`).join(", ")}. Use your judgment on where each fits best based on its label (e.g. a photo labeled "storefront" likely belongs in the hero, "interior" or a product name likely belongs in a gallery/story section).`
       : ""
+
+  const facts = [
+    address && `Address: ${address}`,
+    phone && `Phone: ${phone}`,
+    hours && `Hours: ${hours}`,
+    website && `Existing website: ${website}`,
+  ].filter(Boolean)
+  const factsBlock =
+    facts.length > 0
+      ? `\n\nReal business details (use these exactly, verbatim - do not invent or alter any of this):\n${facts.join("\n")}`
+      : "\n\nNo verified address/phone/hours available - do not invent placeholder contact info; leave those fields out of the design rather than making something up."
 
   return `${BRAND_GUIDANCE}
 
 Build a single-page demo website for this business:
 
 Business name: ${businessName}
-Description: ${description}${photoGuidance}
+Description: ${description}${factsBlock}${photoGuidance}
 
 This is a sales demo a web design studio (Bayne Studio) is sending to this business to win
 them as a client — it needs to look genuinely professional and tailored to them specifically,
 not generic.`
 }
 
-type ClientConfig = {
-  businessName: string
-  description: string
-}
-
-function loadClientConfig(storename: string): ClientConfig {
-  const configPath = path.join(process.cwd(), "clients", storename, "config.json")
-  if (!fs.existsSync(configPath)) {
-    throw new Error(
-      `No config found at clients/${storename}/config.json. Create that file with { "businessName": "...", "description": "..." } first.`,
-    )
-  }
-
-  const raw = fs.readFileSync(configPath, "utf-8")
-  const parsed = JSON.parse(raw)
-
-  if (!parsed.businessName || !parsed.description) {
-    throw new Error(`clients/${storename}/config.json must have both "businessName" and "description".`)
-  }
-
-  return { businessName: parsed.businessName, description: parsed.description }
-}
-
 async function generateSite(storename: string) {
-  const { businessName, description } = loadClientConfig(storename)
+  const clientConfig = loadClientConfig(storename)
+  const { businessName, description } = clientConfig
 
   console.log(`Checking for photos in clients/${storename}/photos/...`)
   const photos = await uploadClientPhotos(storename)
   console.log(photos.length > 0 ? `Uploaded ${photos.length} photo(s).` : `No photos found - proceeding without.`)
 
-  const prompt = buildPrompt(businessName, description, photos)
+  const prompt = buildPrompt(clientConfig, photos)
 
   // Using createAsync + polling instead of the synchronous create() call.
   // create() holds one HTTP connection open for the entire generation,
