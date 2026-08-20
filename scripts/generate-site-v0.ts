@@ -1,18 +1,22 @@
 /**
  * Usage:
- *   npx tsx scripts/generate-site-v0.ts "joes-pizza" "Family-run pizza shop in Hillsborough NJ, dine-in and delivery, wants a classic red-and-white feel"
+ *   npx tsx scripts/generate-site-v0.ts example-antiques
  *
- * Requires V0_API_KEY in your environment (get one at https://v0.app -> settings -> API keys).
- * This is a DIFFERENT key from your ANTHROPIC_API_KEY — v0's API and Claude's API are
- * separate products with separate billing. You may not need ANTHROPIC_API_KEY at all
- * for this version of the pipeline; see PROMPT_ENHANCEMENT note below.
+ * Reads clients/<storename>/config.json for businessName + description,
+ * and uploads every image in clients/<storename>/photos/ to Vercel Blob
+ * automatically, passing the resulting URLs to v0 as attachments. Name
+ * photo files descriptively (storefront.jpg, interior-1.jpg) since the
+ * filename becomes the label that tells v0 what each photo shows.
  *
- * Unlike the old generate-site.ts, this doesn't fill a fixed schema — it sends a prompt
- * to v0's actual app-building agent and gets back a real, bespoke generated site.
+ * Requires V0_API_KEY (v0.app -> settings -> API keys) and, if the client
+ * has a photos/ folder, BLOB_READ_WRITE_TOKEN (Vercel dashboard -> Storage
+ * -> create a Blob store -> connect to this project).
  */
 import { config } from "dotenv"
 config({ path: ".env.local" })
 
+import fs from "node:fs"
+import path from "node:path"
 import { Agent, setGlobalDispatcher } from "undici"
 
 // Node's default fetch timeout is too short for full site generations,
@@ -30,6 +34,7 @@ setGlobalDispatcher(
 
 import { createV0Client } from "v0"
 import { saveChatRecord } from "../lib/sites/get-chat"
+import { uploadClientPhotos } from "../lib/sites/upload-photos"
 
 // Built explicitly, after config() above has already run, so this always
 // sees the real key — unlike the default `v0` singleton export, which
@@ -57,21 +62,55 @@ House style for Bayne Studio client demo sites:
 - No placeholder Lorem Ipsum — write real, specific-sounding copy based on the description given.
 `.trim()
 
-function buildPrompt(businessName: string, description: string): string {
+function buildPrompt(businessName: string, description: string, photos: { label: string }[]): string {
+  const photoGuidance =
+    photos.length > 0
+      ? `\n\nAttached photos, in this order: ${photos.map((p, i) => `${i + 1}. ${p.label}`).join(", ")}. Use your judgment on where each fits best based on its label (e.g. a photo labeled "storefront" likely belongs in the hero, "interior" or a product name likely belongs in a gallery/story section).`
+      : ""
+
   return `${BRAND_GUIDANCE}
 
 Build a single-page demo website for this business:
 
 Business name: ${businessName}
-Description: ${description}
+Description: ${description}${photoGuidance}
 
 This is a sales demo a web design studio (Bayne Studio) is sending to this business to win
 them as a client — it needs to look genuinely professional and tailored to them specifically,
 not generic.`
 }
 
-async function generateSite(storename: string, businessName: string, description: string) {
-  const prompt = buildPrompt(businessName, description)
+type ClientConfig = {
+  businessName: string
+  description: string
+}
+
+function loadClientConfig(storename: string): ClientConfig {
+  const configPath = path.join(process.cwd(), "clients", storename, "config.json")
+  if (!fs.existsSync(configPath)) {
+    throw new Error(
+      `No config found at clients/${storename}/config.json. Create that file with { "businessName": "...", "description": "..." } first.`,
+    )
+  }
+
+  const raw = fs.readFileSync(configPath, "utf-8")
+  const parsed = JSON.parse(raw)
+
+  if (!parsed.businessName || !parsed.description) {
+    throw new Error(`clients/${storename}/config.json must have both "businessName" and "description".`)
+  }
+
+  return { businessName: parsed.businessName, description: parsed.description }
+}
+
+async function generateSite(storename: string) {
+  const { businessName, description } = loadClientConfig(storename)
+
+  console.log(`Checking for photos in clients/${storename}/photos/...`)
+  const photos = await uploadClientPhotos(storename)
+  console.log(photos.length > 0 ? `Uploaded ${photos.length} photo(s).` : `No photos found - proceeding without.`)
+
+  const prompt = buildPrompt(businessName, description, photos)
 
   // Using createAsync + polling instead of the synchronous create() call.
   // create() holds one HTTP connection open for the entire generation,
@@ -80,7 +119,10 @@ async function generateSite(storename: string, businessName: string, description
   // "other side closed"), not just our client. createAsync queues the job
   // and returns immediately; we then poll a separate, fast status check
   // instead of keeping one fragile long-lived connection open.
-  const queued = await v0.chats.createAsync({ message: prompt })
+  const queued = await v0.chats.createAsync({
+    message: prompt,
+    attachments: photos.map((p) => ({ url: p.url })),
+  })
   if (queued.error) {
     console.error("v0 error object:", queued.error)
     console.error("Underlying cause:", (queued.error as any)?.cause)
@@ -143,15 +185,14 @@ async function generateSite(storename: string, businessName: string, description
   )
 }
 
-const [, , storename, businessName, description] = process.argv
-if (!storename || !businessName || !description) {
-  console.error(
-    'Usage: npx tsx scripts/generate-site-v0.ts "<storename>" "<business name>" "<description>"',
-  )
+const [, , storename] = process.argv
+if (!storename) {
+  console.error("Usage: npx tsx scripts/generate-site-v0.ts <storename>")
+  console.error(`(expects clients/<storename>/config.json to exist)`)
   process.exit(1)
 }
 
-generateSite(storename, businessName, description).catch((err) => {
+generateSite(storename).catch((err) => {
   console.error(err)
   process.exit(1)
 })

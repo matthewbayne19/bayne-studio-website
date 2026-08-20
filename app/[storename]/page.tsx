@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { getAllStorenames, getChatRecord } from "@/lib/sites/get-chat"
-import { PreviewFrame } from "@/components/sites/preview-frame"
+import { PreviewFrame } from "@/lib/sites/preview-frame"
 
 type PageProps = {
   params: Promise<{ storename: string }>
