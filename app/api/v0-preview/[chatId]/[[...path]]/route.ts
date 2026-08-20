@@ -1,4 +1,6 @@
 import { fetchPreview, createV0Client } from "v0"
+import { isKnownChatId } from "@/lib/sites/get-chat"
+import { checkRateLimit, getClientKey } from "@/lib/rate-limit"
 
 // Next.js loads .env.local into process.env before any app code runs (via
 // @next/env, outside the normal module-import graph), so the default `v0`
@@ -44,6 +46,20 @@ async function handler(request: Request, { params }: { params: Promise<Params> }
   const requestUrl = new URL(request.url)
   const name = requestUrl.searchParams.get("name") ?? ""
   const nameQuery = name ? `?name=${encodeURIComponent(name)}` : ""
+
+  // SECURITY: this route is reachable directly, not only via a /[storename]
+  // page — so chatId is untrusted input. Only proxy chat IDs we actually
+  // generated (see lib/sites/get-chat.ts). This also guarantees chatId is
+  // one of our own clean, known-safe IDs before it's ever reflected into
+  // HTML below, closing the XSS risk from an attacker-supplied chatId.
+  if (!isKnownChatId(chatId)) {
+    return new Response("Not found", { status: 404 })
+  }
+
+  const { allowed } = checkRateLimit(getClientKey(request))
+  if (!allowed) {
+    return new Response("Too many requests", { status: 429, headers: { "Retry-After": "60" } })
+  }
 
   try {
     if (!process.env.V0_API_KEY) {

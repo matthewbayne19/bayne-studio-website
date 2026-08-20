@@ -1,3 +1,6 @@
+import { isKnownChatId } from "@/lib/sites/get-chat"
+import { checkRateLimit, getClientKey } from "@/lib/rate-limit"
+
 // Never cache this route. It renders per-request state (retry count via
 // the meta-refresh chain, the business name) and must always execute
 // fresh - Next.js caches GET route handlers by default otherwise, which
@@ -6,17 +9,33 @@ export const dynamic = "force-dynamic"
 
 export async function GET(request: Request, { params }: { params: Promise<{ chatId: string }> }) {
   const { chatId } = await params
+
+  // SECURITY: same reasoning as the main preview route - chatId is
+  // untrusted input from the URL and gets reflected into HTML below, so it
+  // must be a chat ID we actually generated before we do anything with it.
+  if (!isKnownChatId(chatId)) {
+    return new Response("Not found", { status: 404 })
+  }
+
+  const { allowed } = checkRateLimit(getClientKey(request))
+  if (!allowed) {
+    return new Response("Too many requests", { status: 429, headers: { "Retry-After": "60" } })
+  }
+
   const url = new URL(request.url)
   const name = url.searchParams.get("name") ?? ""
   const nameQuery = name ? `?name=${encodeURIComponent(name)}` : ""
   const displayName = name || "your site"
+  // Belt-and-suspenders: escape even though isKnownChatId already
+  // guarantees this is one of our own clean IDs.
+  const safeChatId = escapeHtml(chatId)
 
   return new Response(
     `<!doctype html>
 <html>
 
 <head>
-  <meta http-equiv="refresh" content="2;url=/api/v0-preview/${chatId}/${nameQuery}" />
+  <meta http-equiv="refresh" content="2;url=/api/v0-preview/${safeChatId}/${nameQuery}" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 

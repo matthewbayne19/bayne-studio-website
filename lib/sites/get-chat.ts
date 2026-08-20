@@ -30,3 +30,21 @@ export function saveChatRecord(record: ChatRecord): void {
   const filePath = path.join(CHATS_DIR, `${record.storename}.json`)
   fs.writeFileSync(filePath, JSON.stringify(chatRecordSchema.parse(record), null, 2))
 }
+
+/**
+ * SECURITY: the /api/v0-preview/[chatId] route is reachable directly by
+ * anyone, not just through a /[storename] page — so it must never trust a
+ * chatId that didn't come from our own records. This allowlist is checked
+ * before that route calls the v0 API or reflects the chatId into any HTML,
+ * which closes both the free-riding/cost-abuse angle (only real, intended
+ * demo chats can be proxied) and the XSS angle (only clean, known-safe IDs
+ * we generated ourselves ever reach the page).
+ */
+let knownChatIdsCache: Set<string> | null = null
+
+export function isKnownChatId(chatId: string): boolean {
+  if (!knownChatIdsCache) {
+    knownChatIdsCache = new Set(getAllStorenames().map((s) => getChatRecord(s)?.chatId).filter((id): id is string => !!id))
+  }
+  return knownChatIdsCache.has(chatId)
+}
