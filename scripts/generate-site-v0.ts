@@ -59,6 +59,9 @@ House style for Bayne Studio client demo sites:
 - Include a hero section, a contact/hours section, and 1-2 sections specific to what the
   business actually sells or does.
 - No placeholder Lorem Ipsum — write real, specific-sounding copy based on the description given.
+- Never use em dashes (—) or double hyphens (--) anywhere in the site's written copy. Use periods,
+  commas, or parentheses instead. This is one of the most common tells that text was AI-generated,
+  and undermines the "genuinely professional, not generic" goal above.
 `.trim()
 
 function buildPrompt(clientConfig: ClientConfig, photos: { label: string }[]): string {
@@ -95,6 +98,16 @@ not generic.`
 async function generateSite(storename: string) {
   const clientConfig = loadClientConfig(storename)
   const { businessName, description } = clientConfig
+
+  // Refuse to burn an API call on a description that was never actually
+  // written - this is exactly what happened with Simon Vintage: the
+  // lookup-business.ts placeholder went out as real input, and v0 had
+  // nothing meaningful to build from.
+  if (description.trim().toUpperCase().startsWith("TODO")) {
+    throw new Error(
+      `clients/${storename}/config.json still has a placeholder description. Write a real one (what the business does, its personality/vibe) before generating.`,
+    )
+  }
 
   console.log(`Checking for photos in clients/${storename}/photos/...`)
   const photos = await uploadClientPhotos(storename)
@@ -143,6 +156,22 @@ async function generateSite(storename: string) {
 
     if (finishReason === "error") {
       throw new Error("v0 reported generation ended in an error state")
+    }
+
+    // tool-calls means the agent used a tool and is now waiting on
+    // something - in practice this often means it hit a snag (like a
+    // failed scrape attempt) and is asking YOU a clarifying question
+    // directly in v0's chat UI. This is not completion, even though
+    // finishReason is set - treating it as success is what caused
+    // "Chat has no previewable files" to look like a mystery instead of
+    // an expected state. Stop polling and tell you to go answer it.
+    if (finishReason === "tool-calls") {
+      console.log(`\nv0 is waiting for input, not finished generating.`)
+      console.log(
+        `Go to https://v0.app and open the "${businessName}" chat (id ${chatId}) - it likely asked a clarifying question (e.g. it may have tried to research the business and hit a snag) that needs answering before it continues.`,
+      )
+      console.log(`Once you've answered there, re-run this script or use refine-site.ts against chat ${chatId}.`)
+      return
     }
 
     if (finishReason) {

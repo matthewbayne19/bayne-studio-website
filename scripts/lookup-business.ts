@@ -69,7 +69,7 @@ async function synthesizeDescription(
     messages: [
       {
         role: "user",
-        content: `Based on this real data about "${businessName}", write a 2-3 sentence description for use as input to an AI website generator. Cover what the business does/sells AND its personality/vibe (tone, character, what makes it feel distinct) - not just a factual summary. Write it as plain description text only, no preamble, no quotes around it.
+        content: `Based on this real data about "${businessName}", write a 2-3 sentence description for use as input to an AI website generator. Cover what the business does/sells AND its personality/vibe (tone, character, what makes it feel distinct) - not just a factual summary. Write it as plain description text only, no preamble, no quotes around it. Do not use em dashes (—) or double hyphens (--) anywhere in the text - use periods or commas instead.
 
 ${signals}`,
       },
