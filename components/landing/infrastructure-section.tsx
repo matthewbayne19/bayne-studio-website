@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from "react";
 
 const highlights = [
   { label: "Status", value: "Acquired", detail: "October 2025" },
-  { label: "Users", value: "500+", detail: "Users Served" },
 ];
 
 export function InfrastructureSection() {
@@ -48,7 +47,7 @@ export function InfrastructureSection() {
             </p>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 gap-8 md:gap-12 max-w-xs">
+            <div className="max-w-xs">
               {highlights.map((stat) => (
                 <div key={stat.label}>
                   <div className="text-2xl md:text-3xl lg:text-4xl font-display mb-1 md:mb-2">{stat.value}</div>
@@ -66,12 +65,8 @@ export function InfrastructureSection() {
           >
             <div className="border border-foreground/10 bg-foreground/[0.02]">
               {/* Header */}
-              <div className="px-6 py-4 border-b border-foreground/10 flex items-center justify-between">
+              <div className="px-6 py-4 border-b border-foreground/10">
                 <span className="text-sm font-mono text-muted-foreground">Case Study</span>
-                <span className="flex items-center gap-2 text-xs font-mono text-[#0EA5E9]">
-                  <span className="w-2 h-2 rounded-full bg-[#0EA5E9]" />
-                  Acquired
-                </span>
               </div>
 
               {/* Content */}
@@ -90,13 +85,9 @@ export function InfrastructureSection() {
                     <span className="text-sm text-muted-foreground">Backend</span>
                     <span className="text-sm font-medium">Node.js + Supabase</span>
                   </div>
-                  <div className="flex items-center justify-between py-3 border-b border-foreground/5">
+                  <div className="flex items-center justify-between py-3">
                     <span className="text-sm text-muted-foreground">Timeline</span>
                     <span className="text-sm font-medium">2024 - 2025</span>
-                  </div>
-                  <div className="flex items-center justify-between py-3">
-                    <span className="text-sm text-muted-foreground">Outcome</span>
-                    <span className="text-sm font-medium text-[#0EA5E9]">Acquired</span>
                   </div>
                 </div>
 
