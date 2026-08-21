@@ -92,8 +92,8 @@ export default function PrivacyPolicyPage() {
       <LegalSection id="contact" number={7} title="Contact">
         <p>
           Questions about this policy or your data? Email us at{" "}
-          <a href="mailto:hello@matthew-bayne.com" className="text-foreground underline underline-offset-4 decoration-foreground/30 hover:decoration-foreground transition-colors">
-            hello@matthew-bayne.com
+          <a href="mailto:hello@baynestudio.com" className="text-foreground underline underline-offset-4 decoration-foreground/30 hover:decoration-foreground transition-colors">
+            hello@baynestudio.com
           </a>
           .
         </p>

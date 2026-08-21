@@ -95,8 +95,8 @@ export default function TermsPage() {
       <LegalSection id="contact" number={7} title="Contact">
         <p>
           Questions about these Terms? Email us at{" "}
-          <a href="mailto:hello@matthew-bayne.com" className="text-foreground underline underline-offset-4 decoration-foreground/30 hover:decoration-foreground transition-colors">
-            hello@matthew-bayne.com
+          <a href="mailto:hello@baynestudio.com" className="text-foreground underline underline-offset-4 decoration-foreground/30 hover:decoration-foreground transition-colors">
+            hello@baynestudio.com
           </a>
           .
         </p>
