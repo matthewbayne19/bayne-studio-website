@@ -109,7 +109,7 @@ export function CtaSection() {
           project_type: formData.projectType,
           budget: formData.budget,
           message: formData.message,
-          to_email: "hello@matthew-bayne.com",
+          to_email: "hello@baynestudio.com",
         },
         process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || "public_key"
       );
@@ -192,7 +192,7 @@ export function CtaSection() {
                     <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
                     <h3 className="text-2xl font-display mb-2">Something went wrong</h3>
                     <p className="text-muted-foreground mb-4">
-                      Please try again or email us directly at hello@matthew-bayne.com
+                      Please try again or email us directly at hello@baynestudio.com
                     </p>
                     <Button
                       variant="outline"

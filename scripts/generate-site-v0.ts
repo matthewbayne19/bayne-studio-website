@@ -62,6 +62,18 @@ House style for Bayne Studio client demo sites:
 - Never use em dashes (—) or double hyphens (--) anywhere in the site's written copy. Use periods,
   commas, or parentheses instead. This is one of the most common tells that text was AI-generated,
   and undermines the "genuinely professional, not generic" goal above.
+- Design mobile-first, not just "responsive." Most prospects will open this link on their phone, not
+  a laptop, so mobile is the primary experience to get right, not an afterthought pass on a desktop
+  design. Specifically: no horizontal scrolling or overflow at any width; tap targets (buttons, links)
+  at least 44px tall; hero text sized so headlines don't force awkward wrapping on a 375px-wide screen;
+  images and galleries that reflow to a single column on mobile rather than staying multi-column and
+  shrinking illegibly; a nav that collapses sensibly (hamburger menu or similar) rather than cramming
+  every link into a shrunk header.
+- In the footer, include a small site-credit line naming Bayne Studio (e.g. "Site design by
+  Bayne Studio" or similar wording is fine to vary). The words "Bayne Studio" specifically must
+  always be a real anchor link (<a href="https://baynestudio.com">) to https://baynestudio.com,
+  not plain unlinked text. This is a strict, non-negotiable requirement, not a stylistic
+  suggestion - every generated site must include this working link, exactly as specified.
 `.trim()
 
 function buildPrompt(clientConfig: ClientConfig, photos: { label: string }[]): string {
