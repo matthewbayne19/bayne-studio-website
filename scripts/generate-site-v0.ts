@@ -77,7 +77,8 @@ House style for Bayne Studio client demo sites:
 `.trim()
 
 function buildPrompt(clientConfig: ClientConfig, photos: { label: string }[]): string {
-  const { businessName, description, address, phone, hours, website } = clientConfig
+  const { businessName, description, address, phone, hours, website, instagram, etsy, sellsAt, aboutCreator } =
+    clientConfig
 
   const photoGuidance =
     photos.length > 0
@@ -89,18 +90,25 @@ function buildPrompt(clientConfig: ClientConfig, photos: { label: string }[]): s
     phone && `Phone: ${phone}`,
     hours && `Hours: ${hours}`,
     website && `Existing website: ${website}`,
+    instagram && `Instagram: ${instagram}`,
+    etsy && `Etsy shop: ${etsy}`,
+    sellsAt && `Where sold / found in person: ${sellsAt}`,
   ].filter(Boolean)
   const factsBlock =
     facts.length > 0
       ? `\n\nReal business details (use these exactly, verbatim - do not invent or alter any of this):\n${facts.join("\n")}`
       : "\n\nNo verified address/phone/hours available - do not invent placeholder contact info; leave those fields out of the design rather than making something up."
 
+  const aboutCreatorBlock = aboutCreator
+    ? `\n\nInclude a section titled roughly "${aboutCreator.sectionTitle}" (exact wording can vary slightly for flow) built from this real content - you may paraphrase lightly for tone, but keep the substance and warmth intact, and do not invent additional biographical details beyond what's given here:\n"${aboutCreator.content}"`
+    : ""
+
   return `${BRAND_GUIDANCE}
 
 Build a single-page demo website for this business:
 
 Business name: ${businessName}
-Description: ${description}${factsBlock}${photoGuidance}
+Description: ${description}${factsBlock}${aboutCreatorBlock}${photoGuidance}
 
 This is a sales demo a web design studio (Bayne Studio) is sending to this business to win
 them as a client — it needs to look genuinely professional and tailored to them specifically,

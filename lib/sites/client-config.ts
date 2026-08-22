@@ -12,7 +12,16 @@ import path from "node:path"
  *   source - business owners keep this updated directly on their Google
  *   Business Profile). All optional, since a client config can exist
  *   before a lookup has been run, or if lookup finds nothing.
+ * instagram/etsy/sellsAt: for businesses without a storefront or website -
+ *   makers, vendors, market/craft-show sellers. All optional.
+ * aboutCreator: for solo/maker businesses where the founder's story is
+ *   itself part of the pitch. Optional - most businesses won't need this.
  */
+export type AboutCreatorSection = {
+  sectionTitle: string
+  content: string
+}
+
 export type ClientConfig = {
   businessName: string
   description: string
@@ -20,10 +29,41 @@ export type ClientConfig = {
   phone?: string
   hours?: string // human-readable, e.g. "Mon-Fri 9:00 AM - 5:00 PM"
   website?: string
+  instagram?: string
+  etsy?: string
+  sellsAt?: string // e.g. "Local craft shows and markets across the tri-state area"
+  aboutCreator?: AboutCreatorSection
 }
 
 export function getClientConfigPath(storename: string): string {
   return path.join(process.cwd(), "clients", storename, "config.json")
+}
+
+/**
+ * Replaces em dashes and double hyphens with a period. This is exactly the
+ * pattern we tell v0 never to use in its OWN output - if input text (a
+ * description, an about-creator blurb) already contains it, there's a real
+ * risk v0 mirrors that formatting despite the instruction. Best-effort
+ * cleanup, not a full grammar rewrite - logs when it changes something so
+ * this isn't a silent, invisible mutation of what you wrote.
+ */
+function sanitizeDashes(text: string, fieldLabel: string): string {
+  const cleaned = text.replace(/\s*(--|—)\s*/g, ". ").replace(/\.\s*\./g, ".")
+  if (cleaned !== text) {
+    console.log(`  Note: cleaned em dash/double hyphen out of "${fieldLabel}" (v0 is instructed never to use these).`)
+  }
+  return cleaned
+}
+
+function sanitizeConfig(config: ClientConfig): ClientConfig {
+  const sanitized: ClientConfig = { ...config, description: sanitizeDashes(config.description, "description") }
+  if (sanitized.aboutCreator) {
+    sanitized.aboutCreator = {
+      ...sanitized.aboutCreator,
+      content: sanitizeDashes(sanitized.aboutCreator.content, "aboutCreator.content"),
+    }
+  }
+  return sanitized
 }
 
 export function loadClientConfig(storename: string): ClientConfig {
@@ -41,7 +81,7 @@ export function loadClientConfig(storename: string): ClientConfig {
     throw new Error(`clients/${storename}/config.json must have both "businessName" and "description".`)
   }
 
-  return parsed as ClientConfig
+  return sanitizeConfig(parsed as ClientConfig)
 }
 
 /**
