@@ -1,11 +1,20 @@
 /**
  * Usage:
  *   npx tsx scripts/lookup-business.ts example-antiques "Hillsborough Antiques" "Hillsborough NJ"
+ *   npx tsx scripts/lookup-business.ts example-antiques "Hillsborough Antiques" "Hillsborough NJ" "https://their-old-site.com"
  *
  * Looks up real address, phone, hours, and website via Google Places API,
  * plus Google's AI-generated place summary and a few real reviews, then
  * uses Claude to synthesize an actual description (what the business does,
  * its personality/vibe) - fully automated, no manual writing required.
+ *
+ * If a 4th argument (an existing site URL) is given, that site's own text
+ * is fetched and used as ADDITIONAL signal for the synthesis - this is for
+ * prospects who already have a site that needs a refresh: their own copy
+ * is often the best signal for how they've already chosen to position
+ * themselves, better than generic category/review data alone. The site's
+ * text is only ever used as research input to Claude - never copied
+ * verbatim into the written description, same treatment as Google reviews.
  *
  * Won't overwrite businessName/description if you've already written a
  * real one - only refreshes hard facts. Safe to re-run to update stale info.
@@ -20,6 +29,7 @@ config({ path: ".env.local" })
 
 import fs from "node:fs"
 import Anthropic from "@anthropic-ai/sdk"
+import * as cheerio from "cheerio"
 import { saveClientConfig, getClientConfigPath } from "../lib/sites/client-config"
 
 type PlacesTextSearchResponse = {
@@ -38,6 +48,43 @@ type PlacesTextSearchResponse = {
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 /**
+ * Fetches an existing site and extracts its visible text content (title,
+ * meta description, headings, body copy), stripping script/style/nav
+ * boilerplate as much as reasonably possible. Returns null on any failure
+ * (site down, blocks bots, etc.) rather than throwing - an existing site
+ * is a nice-to-have signal, not a required one, and the rest of the
+ * lookup should proceed normally without it.
+ */
+async function fetchExistingSiteText(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; BayneStudioBot/1.0)" },
+    })
+    if (!response.ok) {
+      console.log(`  Could not fetch ${url} (status ${response.status}) - continuing without it.`)
+      return null
+    }
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+    $("script, style, nav, footer, noscript").remove()
+
+    const title = $("title").text().trim()
+    const metaDescription = $('meta[name="description"]').attr("content")?.trim() ?? ""
+    const bodyText = $("body").text().replace(/\s+/g, " ").trim()
+
+    const combined = [title, metaDescription, bodyText].filter(Boolean).join("\n\n")
+    // Cap length to keep the Claude prompt reasonable - the first couple
+    // thousand characters of a homepage are almost always where the real
+    // positioning/voice signal lives anyway (hero copy, about section).
+    return combined.slice(0, 3000) || null
+  } catch (err) {
+    console.log(`  Could not fetch ${url} (${err instanceof Error ? err.message : err}) - continuing without it.`)
+    return null
+  }
+}
+
+/**
  * Synthesizes a real description from Google's raw signals - the AI
  * overview, a few real reviews, and the business category. This is what
  * actually removes the manual-writing step: Places gives facts and raw
@@ -48,18 +95,21 @@ async function synthesizeDescription(
   primaryType: string | undefined,
   overview: string | undefined,
   reviewTexts: string[],
+  existingSiteText: string | null,
 ): Promise<string> {
   const signals = [
     primaryType && `Category: ${primaryType}`,
     overview && `Google's summary: ${overview}`,
     reviewTexts.length > 0 && `Real customer reviews:\n${reviewTexts.map((r) => `- "${r}"`).join("\n")}`,
+    existingSiteText &&
+      `Text extracted from their EXISTING website (this is what they've already chosen to say about themselves - use it to understand their positioning, tone, and what they offer, but do NOT copy phrases verbatim; write entirely original wording):\n${existingSiteText}`,
   ]
     .filter(Boolean)
     .join("\n\n")
 
   if (!signals) {
     throw new Error(
-      "No usable signal (no category, summary, or reviews) - can't synthesize a description. Write one manually in the config.",
+      "No usable signal (no category, summary, reviews, or existing site) - can't synthesize a description. Write one manually in the config.",
     )
   }
 
@@ -69,7 +119,7 @@ async function synthesizeDescription(
     messages: [
       {
         role: "user",
-        content: `Based on this real data about "${businessName}", write a 2-3 sentence description for use as input to an AI website generator. Cover what the business does/sells AND its personality/vibe (tone, character, what makes it feel distinct) - not just a factual summary. Write it as plain description text only, no preamble, no quotes around it. Do not use em dashes (—) or double hyphens (--) anywhere in the text - use periods or commas instead.
+        content: `Based on this real data about "${businessName}", write a 2-3 sentence description for use as input to an AI website generator. Cover what the business does/sells AND its personality/vibe (tone, character, what makes it feel distinct) - not just a factual summary. Write it as plain description text only, no preamble, no quotes around it. Do not use em dashes (—) or double hyphens (--) anywhere in the text - use periods or commas instead. If existing website text is provided below, write entirely original wording - do not reproduce phrases from it verbatim.
 
 ${signals}`,
       },
@@ -84,7 +134,7 @@ ${signals}`,
   return textBlock.text.trim()
 }
 
-async function lookupBusiness(storename: string, businessName: string, city: string) {
+async function lookupBusiness(storename: string, businessName: string, city: string, existingSiteUrl?: string) {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY
   if (!apiKey) {
     throw new Error("GOOGLE_PLACES_API_KEY is not set in .env.local")
@@ -145,8 +195,15 @@ async function lookupBusiness(storename: string, businessName: string, city: str
   console.log(`  Category: ${primaryType ?? "(not found)"}`)
   console.log(`  Reviews found: ${reviewTexts.length}`)
 
-  console.log(`\nSynthesizing description from Google's summary + reviews...`)
-  const description = await synthesizeDescription(businessName, primaryType, overview, reviewTexts)
+  let existingSiteText: string | null = null
+  if (existingSiteUrl) {
+    console.log(`\nFetching existing site: ${existingSiteUrl}...`)
+    existingSiteText = await fetchExistingSiteText(existingSiteUrl)
+    console.log(existingSiteText ? `  Extracted ${existingSiteText.length} characters of text.` : `  No usable text extracted.`)
+  }
+
+  console.log(`\nSynthesizing description from Google's summary + reviews${existingSiteText ? " + existing site" : ""}...`)
+  const description = await synthesizeDescription(businessName, primaryType, overview, reviewTexts, existingSiteText)
   console.log(`Synthesized description:\n  ${description}`)
 
   // Only include fields Places actually returned - never write an
@@ -177,13 +234,15 @@ async function lookupBusiness(storename: string, businessName: string, city: str
   console.log(JSON.stringify(merged, null, 2))
 }
 
-const [, , storename, businessName, city] = process.argv
+const [, , storename, businessName, city, existingSiteUrl] = process.argv
 if (!storename || !businessName || !city) {
-  console.error('Usage: npx tsx scripts/lookup-business.ts <storename> "<business name>" "<city, state>"')
+  console.error(
+    'Usage: npx tsx scripts/lookup-business.ts <storename> "<business name>" "<city, state>" ["<existing site URL>"]',
+  )
   process.exit(1)
 }
 
-lookupBusiness(storename, businessName, city).catch((err) => {
+lookupBusiness(storename, businessName, city, existingSiteUrl).catch((err) => {
   console.error(err)
   process.exit(1)
 })
