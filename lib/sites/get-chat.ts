@@ -1,10 +1,16 @@
 import fs from "node:fs"
 import path from "node:path"
 import { chatRecordSchema, type ChatRecord } from "./schema"
+import { isValidStorename } from "./client-config"
 
 const CHATS_DIR = path.join(process.cwd(), "content", "chats")
 
 export function getChatRecord(storename: string): ChatRecord | null {
+  // Reject before it ever becomes part of a filesystem path - closes path
+  // traversal structurally rather than relying on Next.js routing behavior
+  // to prevent it, which is real but external to this codebase.
+  if (!isValidStorename(storename)) return null
+
   const filePath = path.join(CHATS_DIR, `${storename}.json`)
   if (!fs.existsSync(filePath)) return null
 

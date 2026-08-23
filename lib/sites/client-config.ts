@@ -1,5 +1,6 @@
 import fs from "node:fs"
 import path from "node:path"
+import { z } from "zod"
 
 /**
  * clients/<storename>/config.json shape.
@@ -17,22 +18,67 @@ import path from "node:path"
  * aboutCreator: for solo/maker businesses where the founder's story is
  *   itself part of the pitch. Optional - most businesses won't need this.
  */
-export type AboutCreatorSection = {
-  sectionTitle: string
-  content: string
+const aboutCreatorSchema = z.object({
+  sectionTitle: z.string(),
+  content: z.string(),
+})
+export type AboutCreatorSection = z.infer<typeof aboutCreatorSchema>
+
+const clientConfigSchema = z
+  .object({
+    businessName: z.string().min(1),
+    description: z.string().min(1),
+    address: z.string().optional(),
+    phone: z.string().optional(),
+    hours: z.string().optional(),
+    website: z.string().optional(),
+    instagram: z.string().optional(),
+    etsy: z.string().optional(),
+    sellsAt: z.string().optional(),
+    aboutCreator: aboutCreatorSchema.optional(),
+  })
+  // passthrough (not strict): keeps any extra fields you add ahead of the
+  // schema catching up, while still catching real mistakes - e.g. a typo'd
+  // field name doesn't get silently dropped the way a plain `as` cast did,
+  // and a missing required field now fails loudly with a clear message
+  // instead of reaching v0 with an unexpected shape.
+  .passthrough()
+
+export type ClientConfig = z.infer<typeof clientConfigSchema>
+
+/**
+ * Storenames become both a public URL segment and a filesystem path
+ * component (content/chats/<storename>.json). This is the single place
+ * that decides what's a legal storename - enforced both when generating
+ * (fail fast, don't waste an API call on a name that will never resolve)
+ * and when loading a chat record (closes off path traversal structurally,
+ * rather than relying on Next.js routing behavior to prevent it).
+ */
+const STORENAME_PATTERN = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/
+const RESERVED_STORENAMES = new Set([
+  "about",
+  "admin",
+  "api",
+  "blog",
+  "contact",
+  "legal",
+  "privacy",
+  "pricing",
+  "services",
+  "terms",
+])
+
+export function isValidStorename(storename: string): boolean {
+  return STORENAME_PATTERN.test(storename) && !RESERVED_STORENAMES.has(storename)
 }
 
-export type ClientConfig = {
-  businessName: string
-  description: string
-  address?: string
-  phone?: string
-  hours?: string // human-readable, e.g. "Mon-Fri 9:00 AM - 5:00 PM"
-  website?: string
-  instagram?: string
-  etsy?: string
-  sellsAt?: string // e.g. "Local craft shows and markets across the tri-state area"
-  aboutCreator?: AboutCreatorSection
+export function assertValidStorename(storename: string): void {
+  if (!isValidStorename(storename)) {
+    throw new Error(
+      `"${storename}" is not a valid storename. Must be lowercase letters, numbers, and hyphens only ` +
+        `(no leading/trailing hyphen), and can't be a reserved word (${[...RESERVED_STORENAMES].join(", ")}).`,
+    )
+  }
 }
 
 export function getClientConfigPath(storename: string): string {
@@ -67,6 +113,8 @@ function sanitizeConfig(config: ClientConfig): ClientConfig {
 }
 
 export function loadClientConfig(storename: string): ClientConfig {
+  assertValidStorename(storename)
+
   const configPath = getClientConfigPath(storename)
   if (!fs.existsSync(configPath)) {
     throw new Error(
@@ -77,11 +125,17 @@ export function loadClientConfig(storename: string): ClientConfig {
   const raw = fs.readFileSync(configPath, "utf-8")
   const parsed = JSON.parse(raw)
 
-  if (!parsed.businessName || !parsed.description) {
-    throw new Error(`clients/${storename}/config.json must have both "businessName" and "description".`)
+  // Real validation, not a type-only cast - a typo'd field name or a
+  // missing required field now fails loudly here instead of silently
+  // reaching v0 with an unexpected shape.
+  const result = clientConfigSchema.safeParse(parsed)
+  if (!result.success) {
+    throw new Error(
+      `clients/${storename}/config.json failed validation: ${result.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ")}`,
+    )
   }
 
-  return sanitizeConfig(parsed as ClientConfig)
+  return sanitizeConfig(result.data)
 }
 
 /**
@@ -90,6 +144,8 @@ export function loadClientConfig(storename: string): ClientConfig {
  * lookup-business.ts so it never clobbers a description you already wrote.
  */
 export function saveClientConfig(storename: string, updates: Partial<ClientConfig>): ClientConfig {
+  assertValidStorename(storename)
+
   const configPath = getClientConfigPath(storename)
   const dir = path.dirname(configPath)
   fs.mkdirSync(dir, { recursive: true })
@@ -98,7 +154,7 @@ export function saveClientConfig(storename: string, updates: Partial<ClientConfi
     ? JSON.parse(fs.readFileSync(configPath, "utf-8"))
     : {}
 
-  const merged = { ...existing, ...updates } as ClientConfig
+  const merged = clientConfigSchema.parse({ ...existing, ...updates })
   fs.writeFileSync(configPath, JSON.stringify(merged, null, 2))
   return merged
 }

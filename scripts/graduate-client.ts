@@ -8,13 +8,8 @@
  * your sales-demo app. After this runs, add their custom domain to the new
  * Vercel project in the dashboard.
  */
-import { config } from "dotenv"
-config({ path: ".env.local" })
-
-import { createV0Client } from "v0"
+import { v0 } from "../lib/sites/v0-client"
 import { getChatRecord, saveChatRecord } from "../lib/sites/get-chat"
-
-const v0 = createV0Client({ auth: process.env.V0_API_KEY! })
 
 async function graduateClient(storename: string) {
   const record = getChatRecord(storename)

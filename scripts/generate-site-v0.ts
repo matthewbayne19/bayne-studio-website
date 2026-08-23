@@ -12,34 +12,10 @@
  * has a photos/ folder, BLOB_READ_WRITE_TOKEN (Vercel dashboard -> Storage
  * -> create a Blob store -> connect to this project).
  */
-import { config } from "dotenv"
-config({ path: ".env.local" })
-
-import { Agent, setGlobalDispatcher } from "undici"
-
-// Node's default fetch timeout is too short for full site generations,
-// which can genuinely take several minutes for multi-section sites (this
-// is what caused UND_ERR_HEADERS_TIMEOUT / "Headers Timeout Error" - Node
-// gave up waiting for v0's server to respond before it actually finished
-// generating). This raises that ceiling for every fetch call in this
-// process, including the v0 SDK's internal ones.
-setGlobalDispatcher(
-  new Agent({
-    headersTimeout: 10 * 60 * 1000, // 10 minutes
-    bodyTimeout: 10 * 60 * 1000,
-  }),
-)
-
-import { createV0Client } from "v0"
+import { v0 } from "../lib/sites/v0-client"
 import { saveChatRecord } from "../lib/sites/get-chat"
 import { uploadClientPhotos } from "../lib/sites/upload-photos"
 import { loadClientConfig, type ClientConfig } from "../lib/sites/client-config"
-
-// Built explicitly, after config() above has already run, so this always
-// sees the real key — unlike the default `v0` singleton export, which
-// reads process.env at import time (before our config() call gets a
-// chance to run, due to how ES module imports are hoisted).
-const v0 = createV0Client({ auth: process.env.V0_API_KEY! })
 
 // Bayne Studio's house style guidance, prepended to every prompt so
 // generated sites feel consistent across clients without being
@@ -152,7 +128,7 @@ async function generateSite(storename: string) {
     throw new Error(`v0 chat creation failed: ${queued.error.message}`)
   }
 
-  const { chatId, messageId } = queued.data
+  const { chatId, messageId: initialMessageId } = queued.data
   console.log(`Queued generation for "${businessName}" (chat ${chatId}) - polling for completion...`)
 
   // Poll every 5s, up to 10 minutes total, checking finishReason on the
@@ -161,11 +137,22 @@ async function generateSite(storename: string) {
   const maxAttempts = 120
   let attempt = 0
 
+  // currentMessageId can change mid-poll: if v0 hits "tool-calls" (used a
+  // tool, e.g. tried to research the business) it doesn't necessarily stop
+  // there - it can continue working under a NEW message ID the original
+  // queued.data.messageId never anticipated. This is exactly what happened
+  // with Kenzie Keelie Studio: the poller reported "waiting for input"
+  // while the chat kept working and finished successfully in v0's own UI.
+  // Fix: when we see tool-calls, check whether a newer message now exists
+  // (messages.list, newest first) and follow it instead of assuming
+  // completion or stalling.
+  let currentMessageId = initialMessageId
+
   while (attempt < maxAttempts) {
     await new Promise((resolve) => setTimeout(resolve, pollIntervalMs))
     attempt++
 
-    const messageResult = await v0.messages.get({ chatId, messageId })
+    const messageResult = await v0.messages.get({ chatId, messageId: currentMessageId })
     if (messageResult.error) {
       console.error("v0 error object:", messageResult.error)
       throw new Error(`Polling failed: ${messageResult.error.message}`)
@@ -178,14 +165,19 @@ async function generateSite(storename: string) {
       throw new Error("v0 reported generation ended in an error state")
     }
 
-    // tool-calls means the agent used a tool and is now waiting on
-    // something - in practice this often means it hit a snag (like a
-    // failed scrape attempt) and is asking YOU a clarifying question
-    // directly in v0's chat UI. This is not completion, even though
-    // finishReason is set - treating it as success is what caused
-    // "Chat has no previewable files" to look like a mystery instead of
-    // an expected state. Stop polling and tell you to go answer it.
     if (finishReason === "tool-calls") {
+      const listResult = await v0.messages.list({ chatId, limit: 1 })
+      const newestId = !listResult.error ? listResult.data.messages[0]?.id : undefined
+
+      if (newestId && newestId !== currentMessageId) {
+        // A new message appeared after this one - v0 kept working. Follow it.
+        console.log(`\n  (tool-calls on ${currentMessageId}, but chat continued under ${newestId} - following it)`)
+        currentMessageId = newestId
+        continue
+      }
+
+      // No newer message exists - this really is v0 waiting on you, not a
+      // false alarm. Stop polling and say so.
       console.log(`\nv0 is waiting for input, not finished generating.`)
       console.log(
         `Go to https://v0.app and open the "${businessName}" chat (id ${chatId}) - it likely asked a clarifying question (e.g. it may have tried to research the business and hit a snag) that needs answering before it continues.`,

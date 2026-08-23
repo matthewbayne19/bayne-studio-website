@@ -6,7 +6,12 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "eslint .",
-    "start": "next start"
+    "start": "next start",
+    "lookup": "tsx scripts/lookup-business.ts",
+    "generate": "tsx scripts/generate-site-v0.ts",
+    "refine": "tsx scripts/refine-site.ts",
+    "graduate": "tsx scripts/graduate-client.ts",
+    "link-chat": "tsx scripts/link-chat.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

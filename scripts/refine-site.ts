@@ -6,24 +6,8 @@
  * from its current state rather than starting over. This is how you handle
  * "I love it but can you change X" feedback without regenerating from scratch.
  */
-import { config } from "dotenv"
-config({ path: ".env.local" })
-
-import { Agent, setGlobalDispatcher } from "undici"
-
-// Same reasoning as generate-site-v0.ts - refinements can also take a
-// while and are subject to the same default-timeout problem.
-setGlobalDispatcher(
-  new Agent({
-    headersTimeout: 10 * 60 * 1000,
-    bodyTimeout: 10 * 60 * 1000,
-  }),
-)
-
-import { createV0Client } from "v0"
+import { v0 } from "../lib/sites/v0-client"
 import { getChatRecord } from "../lib/sites/get-chat"
-
-const v0 = createV0Client({ auth: process.env.V0_API_KEY! })
 
 async function refineSite(storename: string, instruction: string) {
   const record = getChatRecord(storename)
@@ -43,18 +27,26 @@ async function refineSite(storename: string, instruction: string) {
     throw new Error(`v0 refinement failed: ${queued.error.message}`)
   }
 
-  const { messageId } = queued.data
+  const { messageId: initialMessageId } = queued.data
   console.log(`Queued refinement for "${record.businessName}" - polling for completion...`)
 
   const pollIntervalMs = 5000
   const maxAttempts = 120
   let attempt = 0
 
+  // Same fix as generate-site-v0.ts: tool-calls doesn't necessarily mean
+  // v0 stopped - it can continue under a new message ID. This version
+  // previously had the WORSE bug of the two: it never special-cased
+  // tool-calls at all, so it would fall into the success branch below and
+  // report "Refinement finished (tool-calls)" even when v0 was genuinely
+  // just waiting on a clarifying question you never saw.
+  let currentMessageId = initialMessageId
+
   while (attempt < maxAttempts) {
     await new Promise((resolve) => setTimeout(resolve, pollIntervalMs))
     attempt++
 
-    const messageResult = await v0.messages.get({ chatId: record.chatId, messageId })
+    const messageResult = await v0.messages.get({ chatId: record.chatId, messageId: currentMessageId })
     if (messageResult.error) {
       console.error("v0 error object:", messageResult.error)
       throw new Error(`Polling failed: ${messageResult.error.message}`)
@@ -65,6 +57,23 @@ async function refineSite(storename: string, instruction: string) {
 
     if (finishReason === "error") {
       throw new Error("v0 reported the refinement ended in an error state")
+    }
+
+    if (finishReason === "tool-calls") {
+      const listResult = await v0.messages.list({ chatId: record.chatId, limit: 1 })
+      const newestId = !listResult.error ? listResult.data.messages[0]?.id : undefined
+
+      if (newestId && newestId !== currentMessageId) {
+        console.log(`\n  (tool-calls on ${currentMessageId}, but chat continued under ${newestId} - following it)`)
+        currentMessageId = newestId
+        continue
+      }
+
+      console.log(`\nv0 is waiting for input, not finished refining.`)
+      console.log(
+        `Go to https://v0.app and open the "${record.businessName}" chat (id ${record.chatId}) to answer whatever it's asking, then re-run this refinement.`,
+      )
+      return
     }
 
     if (finishReason) {
