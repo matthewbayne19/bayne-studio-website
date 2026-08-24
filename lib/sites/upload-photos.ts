@@ -58,6 +58,10 @@ export async function uploadClientPhotos(storename: string): Promise<UploadedPho
       access: "public",
       token: process.env.BLOB_READ_WRITE_TOKEN,
       addRandomSuffix: false, // keep predictable, human-readable URLs
+      allowOverwrite: true, // re-running generation/refinement re-uploads the same
+      // filenames on purpose (photos folder contents don't change identity between
+      // runs) - without this, Blob throws instead of overwriting, which is what
+      // just happened on Mulligan's Pub's refinement.
     })
 
     uploaded.push({ url: result.url, label: labelFromFilename(filename) })

@@ -45,12 +45,16 @@ export function saveChatRecord(record: ChatRecord): void {
  * which closes both the free-riding/cost-abuse angle (only real, intended
  * demo chats can be proxied) and the XSS angle (only clean, known-safe IDs
  * we generated ourselves ever reach the page).
+ *
+ * Deliberately NOT cached across calls. generate-site-v0.ts, refine-site.ts,
+ * and link-chat.ts all run as separate Node processes from the running dev
+ * server (or a warm Vercel function in production) - nothing in one process
+ * can invalidate an in-memory cache living in another. A cached version of
+ * this check will always eventually 404 a client that was genuinely just
+ * added, until the server process restarts. Reading a handful of small JSON
+ * files fresh on every check is cheap enough at this scale that caching
+ * isn't worth the staleness risk.
  */
-let knownChatIdsCache: Set<string> | null = null
-
 export function isKnownChatId(chatId: string): boolean {
-  if (!knownChatIdsCache) {
-    knownChatIdsCache = new Set(getAllStorenames().map((s) => getChatRecord(s)?.chatId).filter((id): id is string => !!id))
-  }
-  return knownChatIdsCache.has(chatId)
+  return getAllStorenames().some((s) => getChatRecord(s)?.chatId === chatId)
 }
