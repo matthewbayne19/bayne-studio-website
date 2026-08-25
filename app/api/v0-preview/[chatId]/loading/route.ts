@@ -24,18 +24,68 @@ export async function GET(request: Request, { params }: { params: Promise<{ chat
 
   const url = new URL(request.url)
   const name = url.searchParams.get("name") ?? ""
-  const nameQuery = name ? `?name=${encodeURIComponent(name)}` : ""
   const displayName = name || "your site"
+  const attempt = Number(url.searchParams.get("attempt") ?? "0")
   // Belt-and-suspenders: escape even though isKnownChatId already
   // guarantees this is one of our own clean IDs.
   const safeChatId = escapeHtml(chatId)
+
+  // Real cap, not an infinite loop. 60 attempts * 2s = 2 minutes of sandbox
+  // boot time before we stop pretending everything's fine. This is the gap
+  // that was flagged as open risk a while back and finally caused real
+  // confusion on Mulligan's Pub - a slow-but-working sandbox and a
+  // genuinely stuck one looked identical from here before this existed.
+  const maxAttempts = 60
+
+  if (attempt >= maxAttempts) {
+    const retryParams = new URLSearchParams()
+    if (name) retryParams.set("name", name)
+    retryParams.set("attempt", "0")
+    const retryUrl = `/api/v0-preview/${safeChatId}/?${retryParams.toString()}`
+
+    return new Response(
+      `<!doctype html>
+<html>
+<head>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      display: flex; align-items: center; justify-content: center; height: 100vh;
+      background: #fafaf9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #292524;
+    }
+    .card { text-align: center; padding: 2.5rem; width: 100%; max-width: 340px; }
+    h1 { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 0.5rem; }
+    p { font-size: 0.85rem; color: #78716c; margin-bottom: 1.5rem; line-height: 1.5; }
+    a {
+      display: inline-block; padding: 0.6rem 1.25rem; border-radius: 999px;
+      background: #d97757; color: white; text-decoration: none; font-size: 0.85rem; font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Taking longer than expected</h1>
+    <p>${escapeHtml(displayName)}'s preview hasn't finished starting after a couple minutes. It's probably still working - try checking again, or come back in a few minutes.</p>
+    <a href="${retryUrl}">Check again</a>
+  </div>
+</body>
+</html>`,
+      { headers: { "Content-Type": "text/html", "Cache-Control": "no-store, must-revalidate" } },
+    )
+  }
+
+  const nextParams = new URLSearchParams()
+  if (name) nextParams.set("name", name)
+  nextParams.set("attempt", String(attempt + 1))
+  const nextUrl = `/api/v0-preview/${safeChatId}/?${nextParams.toString()}`
 
   return new Response(
     `<!doctype html>
 <html>
 
 <head>
-  <meta http-equiv="refresh" content="2;url=/api/v0-preview/${safeChatId}/${nameQuery}" />
+  <meta http-equiv="refresh" content="2;url=${nextUrl}" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -112,8 +162,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ chat
 <body>
   <div class="card">
     <div class="mark"></div>
-    <h1>Preparing ${escapeHtml(displayName)}</h1>
-    <p>Building your preview, just a moment</p>
+    <h1>${escapeHtml(displayName)}</h1>
+    <p>Loading your preview...</p>
     <div class="bar-track">
       <div class="bar-fill"></div>
     </div>
