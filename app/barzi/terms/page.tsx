@@ -22,7 +22,7 @@ export default function BarziTermsPage() {
     <LegalPage
       eyebrow="barzi"
       title="Terms of Use"
-      lastUpdated="October 18, 2026"
+      lastUpdated="October 20, 2026"
       sections={sections}
     >
       <p className="text-base text-foreground/80 leading-relaxed mb-14 max-w-[560px]">
@@ -50,10 +50,17 @@ export default function BarziTermsPage() {
 
       <LegalSection id="your-account" number={4} title="Your account">
         <p>
-          Keep your display name and photo appropriate. We may remove content, or suspend an account,
-          that is offensive, impersonates someone, or misuses check-ins. You can delete your account at
-          any time in Settings.
+          You're responsible for what you add to barzi, including your display name, photo and
+          anything you send with Suggest an edit. Keep it appropriate: nothing offensive, nothing
+          that impersonates someone, and no misusing check-ins. When you suggest an edit, you let us
+          use it to update barzi.
         </p>
+        <p>
+          We may remove any content, or suspend or delete any account, at any time and for any reason,
+          including a breach of these terms, with or without notice. If we delete your account, its
+          profile, photo, check-ins and saved bars are deleted with it.
+        </p>
+        <p>You can delete your account at any time in Settings.</p>
       </LegalSection>
 
       <LegalSection id="our-content" number={5} title="Our content">
