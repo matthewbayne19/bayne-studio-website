@@ -43,18 +43,20 @@ export default function BarziPrivacyPage() {
             confirmed you are 21 or older.
           </li>
           <li className="relative before:absolute before:-left-5 before:content-['—'] before:text-muted-foreground">
-            <strong>Your activity in Barzi.</strong> The bars you save and your check-ins (which bar,
-            and when).
+            <strong>Your activity in Barzi.</strong> The bars you save, your check-ins (which bar, and
+            when), and how you use the app: when you open it, which bars you look at, what you search
+            for, and when you tap directions, call, website or Instagram.
           </li>
           <li className="relative before:absolute before:-left-5 before:content-['—'] before:text-muted-foreground">
             <strong>Your location, only when you check in.</strong> Barzi asks for your location to
-            confirm you're at the bar and to show what's near you. We use it for that moment only
-            and do not store it.
+            confirm you're at the bar and to show what's near you. We use it for that moment only and
+            do not store it.
           </li>
         </ul>
 
         <p className="mt-4">
-          We don't use advertising or analytics tools, we don't track you across other apps or
+          We keep this usage record ourselves to see which features and bars people use. We don't use
+          third-party advertising or analytics tools, we don't track you across other apps or
           websites, and we don't sell your information.
         </p>
       </LegalSection>
@@ -62,7 +64,9 @@ export default function BarziPrivacyPage() {
       <LegalSection id="how-we-use-it" number={2} title="How we use it">
         <p>
           We use this information to run Barzi: to sign you in, show your profile, saved bars and
-          check-in history, and keep check-ins to one per bar per night.
+          check-in history, and keep check-ins to one per bar per night. We look at usage in total
+          (for example, how many people viewed a bar this month) to improve the app and, later, to
+          show bars how many people found them. We never show a bar who you are.
         </p>
       </LegalSection>
 
@@ -78,8 +82,8 @@ export default function BarziPrivacyPage() {
 
       <LegalSection id="data-retention" number={4} title="How long we keep it">
         <p>
-          We keep your information while you have an account. When you delete your account, we
-          delete your profile, photo, saved bars and check-ins.
+          We keep your information while you have an account. When you delete your account, we delete
+          your profile, photo, saved bars, check-ins and usage record.
         </p>
       </LegalSection>
 
