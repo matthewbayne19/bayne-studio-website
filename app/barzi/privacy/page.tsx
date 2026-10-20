@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { LegalPage, LegalSection } from "@/components/legal/legal-layout"
 
 export const metadata: Metadata = {
-  title: "Barzi Privacy Policy — Bayne Studio",
+  title: "barzi Privacy Policy — Bayne Studio",
   robots: { index: true, follow: true },
 }
 
@@ -20,13 +20,13 @@ const sections = [
 export default function BarziPrivacyPage() {
   return (
     <LegalPage
-      eyebrow="Barzi"
+      eyebrow="barzi"
       title="Privacy Policy"
       lastUpdated="October 18, 2026"
       sections={sections}
     >
       <p className="text-base text-foreground/80 leading-relaxed mb-14 max-w-[560px]">
-        Barzi is an app made by Bayne Studio ("we", "us"). It shows what's happening at bars
+        barzi is an app made by Bayne Studio ("we", "us"). It shows what's happening at bars
         near you and lets you check in when you're there. This policy explains what we collect,
         why, and what you can do about it.
       </p>
@@ -43,12 +43,12 @@ export default function BarziPrivacyPage() {
             confirmed you are 21 or older.
           </li>
           <li className="relative before:absolute before:-left-5 before:content-['—'] before:text-muted-foreground">
-            <strong>Your activity in Barzi.</strong> The bars you save, your check-ins (which bar, and
+            <strong>Your activity in barzi.</strong> The bars you save, your check-ins (which bar, and
             when), and how you use the app: when you open it, which bars you look at, what you search
             for, and when you tap directions, call, website or Instagram.
           </li>
           <li className="relative before:absolute before:-left-5 before:content-['—'] before:text-muted-foreground">
-            <strong>Your location, only when you check in.</strong> Barzi asks for your location to
+            <strong>Your location, only when you check in.</strong> barzi asks for your location to
             confirm you're at the bar and to show what's near you. We use it for that moment only and
             do not store it.
           </li>
@@ -63,7 +63,7 @@ export default function BarziPrivacyPage() {
 
       <LegalSection id="how-we-use-it" number={2} title="How we use it">
         <p>
-          We use this information to run Barzi: to sign you in, show your profile, saved bars and
+          We use this information to run barzi: to sign you in, show your profile, saved bars and
           check-in history, and keep check-ins to one per bar per night. We look at usage in total
           (for example, how many people viewed a bar this month) to improve the app and, later, to
           show bars how many people found them. We never show a bar who you are.
@@ -72,7 +72,7 @@ export default function BarziPrivacyPage() {
 
       <LegalSection id="who-we-share-it-with" number={3} title="Who we share it with">
         <p>
-          <strong>Supabase</strong> stores Barzi's data and runs our servers.
+          <strong>Supabase</strong> stores barzi's data and runs our servers.
         </p>
         <p>
           <strong>Apple</strong> handles Sign in with Apple.
@@ -89,7 +89,7 @@ export default function BarziPrivacyPage() {
 
       <LegalSection id="your-choices" number={5} title="Your choices">
         <p>
-          <strong>Delete your account</strong> in Barzi under Profile, Settings, Delete account.
+          <strong>Delete your account</strong> in barzi under Profile, Settings, Delete account.
         </p>
         <p>
           <strong>Turn off location</strong> at any time in your iPhone's Settings. You can still
@@ -102,7 +102,7 @@ export default function BarziPrivacyPage() {
       </LegalSection>
 
       <LegalSection id="age" number={6} title="Age">
-        <p>Barzi is only for people 21 or older. We don't knowingly collect information from anyone younger.</p>
+        <p>barzi is only for people 21 or older. We don't knowingly collect information from anyone younger.</p>
       </LegalSection>
 
       <LegalSection id="changes" number={7} title="Changes">
