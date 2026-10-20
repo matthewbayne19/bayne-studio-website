@@ -68,6 +68,12 @@ export default function BarziTermsPage() {
           The barzi app, its design and the venue information we've gathered belong to Bayne Studio.
           Bar names and logos belong to their owners.
         </p>
+        <p>
+          barzi is for personal use. Don’t scrape, crawl, bulk download or copy barzi’s venue
+          information, don’t use bots, scripts or other automated means to access barzi, and don’t
+          use anything from barzi to build or feed another product or database. We may suspend or
+          delete accounts that do.
+        </p>
       </LegalSection>
 
       <LegalSection id="no-warranty" number={6} title="No warranty">
