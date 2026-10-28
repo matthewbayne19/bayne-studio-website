@@ -22,7 +22,7 @@ export default function BarziPrivacyPage() {
     <LegalPage
       eyebrow="barzi"
       title="Privacy Policy"
-      lastUpdated="October 18, 2026"
+      lastUpdated="October 28, 2026"
       sections={sections}
     >
       <p className="text-base text-foreground/80 leading-relaxed mb-14 max-w-[560px]">
@@ -48,9 +48,10 @@ export default function BarziPrivacyPage() {
             for, and when you tap directions, call, website or Instagram.
           </li>
           <li className="relative before:absolute before:-left-5 before:content-['—'] before:text-muted-foreground">
-            <strong>Your location, only when you check in.</strong> barzi asks for your location to
-            confirm you're at the bar and to show what's near you. We use it for that moment only and
-            do not store it.
+            <strong>Your suggestions.</strong> Edits you suggest for a bar, or a bar you tell us is missing.
+          </li>
+          <li className="relative before:absolute before:-left-5 before:content-['—'] before:text-muted-foreground">
+            <strong>Your location.</strong> barzi uses your location while the app is open to show what's near you and to confirm you're at a bar when you check in. We don't store your exact location. We keep a rough area (about a few kilometers) for a few days to stop misuse.
           </li>
         </ul>
 
@@ -83,7 +84,7 @@ export default function BarziPrivacyPage() {
       <LegalSection id="data-retention" number={4} title="How long we keep it">
         <p>
           We keep your information while you have an account. When you delete your account, we delete
-          your profile, photo, saved bars, check-ins and usage record.
+          your profile, photo, saved bars, check-ins, suggestions and usage record.
         </p>
       </LegalSection>
 
@@ -111,7 +112,7 @@ export default function BarziPrivacyPage() {
 
       <LegalSection id="contact" number={8} title="Contact">
         <p>
-          Bayne Studio, <a href="mailto:hello@baynestudio.com" className="text-foreground underline underline-offset-4 decoration-foreground/30 hover:decoration-foreground transition-colors">hello@baynestudio.com</a>
+          Bayne Studio, <a href="mailto:hello@baynestudio.com" className="text-foreground underline underline-offset-4 decoration-foreground/30 hover:decoration-foreground transition-colors">hello@baynestudio.com</a>.
         </p>
       </LegalSection>
     </LegalPage>
