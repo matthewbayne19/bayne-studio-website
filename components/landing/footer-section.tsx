@@ -13,6 +13,7 @@ const footerLinks = [
 const legalLinks = [
   { name: "Privacy Policy", href: "/privacy" },
   { name: "Terms of Service", href: "/terms" },
+  { name: "barzi support", href: "/barzi/support" },
 ];
 
 export function FooterSection() {
