@@ -60,6 +60,12 @@ export default function BarziTermsPage() {
           including a breach of these terms, with or without notice. If we delete your account, its
           profile, photo, check-ins and saved bars are deleted with it.
         </p>
+        <p>
+          Content you upload. You may only upload photos and other content that you own or have
+          permission to use. By uploading, you confirm you have those rights. If you believe
+          something on barzi infringes your copyright, email hello@baynestudio.com and we will review
+          it and remove it if appropriate.
+        </p>
         <p>You can delete your account at any time in Settings.</p>
       </LegalSection>
 
@@ -89,7 +95,7 @@ export default function BarziTermsPage() {
 
       <LegalSection id="contact" number={8} title="Contact">
         <p>
-          Bayne Studio, <a href="mailto:hello@baynestudio.com" className="text-foreground underline underline-offset-4 decoration-foreground/30 hover:decoration-foreground transition-colors">hello@baynestudio.com</a>
+          Bayne Studio, <a href="mailto:hello@baynestudio.com" className="text-foreground underline underline-offset-4 decoration-foreground/30 hover:decoration-foreground transition-colors">hello@baynestudio.com</a>, or via the app.
         </p>
       </LegalSection>
     </LegalPage>
