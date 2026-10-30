@@ -22,7 +22,7 @@ export default function BarziPrivacyPage() {
     <LegalPage
       eyebrow="barzi"
       title="Privacy Policy"
-      lastUpdated="October 28, 2026"
+      lastUpdated="October 30, 2026"
       sections={sections}
     >
       <p className="text-base text-foreground/80 leading-relaxed mb-14 max-w-[560px]">
@@ -45,13 +45,13 @@ export default function BarziPrivacyPage() {
           <li className="relative before:absolute before:-left-5 before:content-['—'] before:text-muted-foreground">
             <strong>Your activity in barzi.</strong> The bars you save, your check-ins (which bar, and
             when), and how you use the app: when you open it, which bars you look at, what you search
-            for, and when you tap directions, call, website or Instagram.
+            for, when you tap directions, call, website or Instagram, and when you share an event or bar (including which app you shared it to).
           </li>
           <li className="relative before:absolute before:-left-5 before:content-['—'] before:text-muted-foreground">
             <strong>Your suggestions.</strong> Edits you suggest for a bar, or a bar you tell us is missing.
           </li>
           <li className="relative before:absolute before:-left-5 before:content-['—'] before:text-muted-foreground">
-            <strong>Your location.</strong> barzi uses your location while the app is open to show what's near you and to confirm you're at a bar when you check in. We don't store your exact location. We keep a rough area (about a few kilometers) for a few days to stop misuse.
+            <strong>Your location.</strong> barzi uses your location while the app is open to show what's near you and to confirm you're at a bar when you check in. We don't store your exact location after you leave a bar.
           </li>
         </ul>
 
